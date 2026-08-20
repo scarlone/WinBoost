@@ -350,6 +350,22 @@ Se in futuro aggiungi aggiornamenti automatici, verifica il binario scaricato **
 firma**, non per hash pubblicato sullo stesso canale: altrimenti chi controlla il canale
 controlla la macchina, che e' il difetto strutturale da cui questo progetto e' nato.
 
+## Licenza
+
+MIT — vedi [LICENSE](LICENSE).
+
+### Componenti di terze parti
+
+Nulla di terze parti viene distribuito con WinBoost, ma due cose meritano di essere dette
+esplicitamente:
+
+- **NVIDIA Profile Inspector** non e' incluso. E' software di terze parti non firmato:
+  incorporarlo significherebbe farsene garanti. Va procurato separatamente e indicato con
+  `--profile-inspector`, e resta soggetto alla propria licenza.
+- Gli identificativi in `data/nvidia-profiles.json` (`SettingID`) sono **costanti del driver
+  NVIDIA**, non nostre: sono dati di fatto necessari a parlare con NVAPI, non espressione
+  coperta dalla licenza di questo progetto. La licenza MIT copre il codice di WinBoost.
+
 ## Limiti noti
 
 - **Il percorso NVIDIA non e' stato provato su una GPU NVIDIA.** Il `.nip` generato e'
