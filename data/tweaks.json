@@ -1,0 +1,1066 @@
+{
+  "schemaVersion": 1,
+  "generated": "2026-08-20",
+  "notes": [
+    "Catalogo tweak ricostruito per analisi funzionale. Ogni tweak e' dichiarativo:",
+    "il motore legge questo file, non contiene logica hardcoded.",
+    "revert: 'snapshot' = il valore precedente viene salvato prima di applicare e",
+    "ripristinato al rollback (se assente prima -> la voce viene cancellata).",
+    "'default' e' solo un fallback informativo quando lo snapshot manca.",
+    "risk: low = cosmetico/reversibile | medium = cambia comportamento di sistema |",
+    "high = disinstalla componenti o tocca driver/rete in modo difficile da annullare."
+  ],
+
+  "categories": [
+    { "id": "privacy",     "name": "Privacy e telemetria",   "description": "Riduce raccolta dati e contenuti suggeriti" },
+    { "id": "explorer",    "name": "Esplora file e shell",   "description": "Comportamento di Explorer, menu, taskbar" },
+    { "id": "interface",   "name": "Interfaccia",            "description": "Tema, effetti visivi, scaling" },
+    { "id": "gaming",      "name": "Gaming",                 "description": "Game Bar, Game DVR, overlay, processi background" },
+    { "id": "performance", "name": "Prestazioni",            "description": "Scheduler, priorita', servizi, power plan" },
+    { "id": "gpu",         "name": "GPU",                    "description": "MSI mode, HAGS, tweak vendor NVIDIA/AMD" },
+    { "id": "network",     "name": "Rete e latenza",         "description": "Stack TCP/IP, schede di rete, DNS" },
+    { "id": "debloat",     "name": "Debloat",                "description": "Rimozione app e componenti preinstallati" },
+    { "id": "cleanup",     "name": "Pulizia",                "description": "File temporanei, cache, disk cleanup" },
+    { "id": "installs",    "name": "Runtime",                "description": "Redistributable e runtime di gioco" },
+    { "id": "updates",     "name": "Aggiornamenti",          "description": "Winget, Store, Windows Update" }
+  ],
+
+  "presets": [
+    { "id": "safe",        "name": "Sicuro",       "description": "Solo tweak a basso rischio, tutti reversibili",
+      "include": { "risk": ["low"] } },
+    { "id": "gaming",      "name": "Gaming",       "description": "Latenza e priorita' per giocare, niente disinstallazioni",
+      "include": { "categories": ["gaming", "gpu", "performance"], "maxRisk": "medium" } },
+    { "id": "competitive", "name": "Competitivo",  "description": "Gaming + tweak rete a bassa latenza",
+      "include": { "categories": ["gaming", "gpu", "performance", "network"], "maxRisk": "medium" } },
+    { "id": "full",        "name": "Completo",     "description": "Tutto, incluse rimozioni. Richiede conferma esplicita",
+      "include": { "all": true }, "requiresConfirmation": true }
+  ],
+
+  "tweaks": [
+    {
+      "id": "privacy.advertising-id",
+      "category": "privacy",
+      "name": "Disattiva ID pubblicitario",
+      "description": "Impedisce alle app di usare un ID univoco per pubblicita' profilata.",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo",
+          "name": "Enabled", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.telemetry",
+      "category": "privacy",
+      "name": "Riduci telemetria al minimo",
+      "description": "AllowTelemetry=1 (Basic/Required). Nota: 0 e' accettato solo su edizioni Enterprise/Education; su Home/Pro Windows lo tratta come 1.",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection",
+          "name": "AllowTelemetry", "valueType": "DWord", "value": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.feedback",
+      "category": "privacy",
+      "name": "Disattiva richieste di feedback",
+      "description": "Windows smette di chiedere feedback periodici.",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Siuf\\Rules", "name": "NumberOfSIUFInPeriod",
+          "valueType": "DWord", "value": 0, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Siuf\\Rules", "name": "PeriodInNanoSeconds",
+          "valueType": "DWord", "value": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.location",
+      "category": "privacy",
+      "name": "Disattiva geolocalizzazione",
+      "description": "Blocca il servizio di localizzazione a livello di sistema e nega il consenso utente.",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "Rompe Mappe, Meteo e la funzione 'Trova il mio dispositivo'.",
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\LocationAndSensors",
+          "name": "DisableLocation", "valueType": "DWord", "value": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\CapabilityAccessManager\\ConsentStore\\location",
+          "name": "Value", "valueType": "String", "value": "Deny", "default": "Allow", "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.delivery-optimization",
+      "category": "privacy",
+      "name": "Disattiva Delivery Optimization",
+      "description": "Impedisce a Windows di distribuire aggiornamenti in P2P usando la tua banda.",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization",
+          "name": "DODownloadMode", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.consumer-features",
+      "category": "privacy",
+      "name": "Disattiva installazione silenziosa di app suggerite",
+      "description": "Blocca l'installazione automatica di app promozionali (Candy Crush, Spotify, ecc.).",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent",
+          "name": "DisableWindowsConsumerFeatures", "valueType": "DWord", "value": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SilentInstalledAppsEnabled", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.start-suggestions",
+      "category": "privacy",
+      "name": "Disattiva suggerimenti nel menu Start",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338388Enabled", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Start_IrisRecommendations", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.settings-suggestions",
+      "category": "privacy",
+      "name": "Disattiva suggerimenti nelle Impostazioni",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-338393Enabled", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-353694Enabled", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager",
+          "name": "SubscribedContent-353696Enabled", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.store-search-suggestions",
+      "category": "privacy",
+      "name": "Disattiva suggerimenti di ricerca dello Store",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Policies\\Microsoft\\Windows\\Explorer",
+          "name": "DisableSearchBoxSuggestions", "valueType": "DWord", "value": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
+          "name": "DisableSearchBoxSuggestions", "valueType": "DWord", "value": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.bing-search",
+      "category": "privacy",
+      "name": "Disattiva ricerca web Bing nel menu Start",
+      "description": "Il menu Start cerca solo in locale, senza interrogare Bing.",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Policies\\Microsoft\\Windows\\Explorer",
+          "name": "DisableSearchBoxSuggestions", "valueType": "DWord", "value": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+          "name": "BingSearchEnabled", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.start-recommendations",
+      "category": "privacy",
+      "name": "Nascondi sezione Consigliati nel menu Start",
+      "risk": "low", "admin": true, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Start_IrisRecommendations", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Explorer",
+          "name": "HideRecommendedSection", "valueType": "DWord", "value": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.store-auto-update",
+      "category": "privacy",
+      "name": "Disattiva aggiornamento automatico app Store",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "Le app Store non riceveranno piu' patch di sicurezza automatiche.",
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\WindowsStore",
+          "name": "AutoDownload", "valueType": "DWord", "value": 2, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.widgets",
+      "category": "privacy",
+      "name": "Disattiva Widget e News/Interessi",
+      "risk": "low", "admin": true, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Dsh",
+          "name": "AllowNewsAndInterests", "valueType": "DWord", "value": 0, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "TaskbarDa", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.tray-notifications",
+      "category": "privacy",
+      "name": "Disattiva centro notifiche e feed calendario",
+      "risk": "medium", "admin": true, "reboot": false, "restart": ["explorer"],
+      "warning": "Nasconde tutte le notifiche di sistema, incluse quelle importanti.",
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Policies\\Microsoft\\Windows\\Explorer",
+          "name": "DisableNotificationCenter", "valueType": "DWord", "value": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds",
+          "name": "EnableFeeds", "valueType": "DWord", "value": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "privacy.wpbt",
+      "category": "privacy",
+      "name": "Disattiva esecuzione WPBT",
+      "description": "Impedisce al firmware UEFI di iniettare eseguibili nel sistema all'avvio (usato da alcuni OEM per reinstallare bloatware).",
+      "risk": "low", "admin": true, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager",
+          "name": "DisableWpbtExecution", "valueType": "DWord", "value": 1, "revert": "snapshot" }
+      ]
+    },
+
+    {
+      "id": "explorer.file-extensions",
+      "category": "explorer",
+      "name": "Mostra estensioni dei file",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "HideFileExt", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "explorer.hidden-files",
+      "category": "explorer",
+      "name": "Mostra file nascosti e di sistema",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "Hidden", "valueType": "DWord", "value": 1, "default": 2, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "ShowSuperHidden", "valueType": "DWord", "value": 1, "default": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "explorer.end-task",
+      "category": "explorer",
+      "name": "Aggiungi 'Termina attivita' al menu della taskbar",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\\TaskbarDeveloperSettings",
+          "name": "TaskbarEndTask", "valueType": "DWord", "value": 1, "default": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "explorer.no-folder-discovery",
+      "category": "explorer",
+      "name": "Disattiva rilevamento automatico tipo cartella",
+      "description": "Evita che Explorer cambi layout in base al contenuto, causa comune di lentezza su cartelle grandi.",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\Bags\\AllFolders\\Shell",
+          "name": "FolderType", "valueType": "String", "value": "NotSpecified", "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "explorer.classic-context-menu",
+      "category": "explorer",
+      "name": "Ripristina menu contestuale classico (Windows 11)",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32",
+          "name": "(default)", "valueType": "String", "value": "", "revert": "delete-key",
+          "revertKey": "HKCU:\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}" }
+      ]
+    },
+    {
+      "id": "explorer.long-paths",
+      "category": "explorer",
+      "name": "Abilita percorsi lunghi (oltre 260 caratteri)",
+      "risk": "low", "admin": true, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem",
+          "name": "LongPathsEnabled", "valueType": "DWord", "value": 1, "default": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "explorer.taskbar-left",
+      "category": "explorer",
+      "name": "Allinea icone taskbar a sinistra",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+          "name": "TaskbarAl", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+
+    {
+      "id": "interface.dark-theme",
+      "category": "interface",
+      "name": "Attiva tema scuro",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "AppsUseLightTheme", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "SystemUsesLightTheme", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "interface.no-transparency",
+      "category": "interface",
+      "name": "Disattiva effetti di trasparenza",
+      "description": "Riduce il carico sulla GPU per la composizione desktop.",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+          "name": "EnableTransparency", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "interface.visual-effects-performance",
+      "category": "interface",
+      "name": "Effetti visivi: prestazioni migliori",
+      "description": "Disattiva animazioni e ombre di Windows.",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects",
+          "name": "VisualFXSetting", "valueType": "DWord", "value": 2, "default": 0, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Control Panel\\Desktop", "name": "UserPreferencesMask",
+          "valueType": "Binary", "value": "9012038010000000", "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "interface.menu-show-delay",
+      "category": "interface",
+      "name": "Azzera ritardo apertura menu",
+      "risk": "low", "admin": false, "reboot": false, "restart": ["explorer"],
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Control Panel\\Desktop", "name": "MenuShowDelay",
+          "valueType": "String", "value": "0", "default": "400", "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "interface.dpi-100",
+      "category": "interface",
+      "name": "Forza scaling display al 100%",
+      "risk": "medium", "admin": false, "reboot": false,
+      "warning": "Su monitor ad alta densita' (4K, laptop) rende testo e UI molto piccoli. Non applicare alla cieca.",
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Control Panel\\Desktop", "name": "Win8DpiScaling",
+          "valueType": "DWord", "value": 0, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Control Panel\\Desktop", "name": "LogPixels",
+          "valueType": "DWord", "value": 96, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "interface.no-blurry-apps-fix",
+      "category": "interface",
+      "name": "Disattiva correzione app sfocate",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Control Panel\\Desktop", "name": "EnablePerProcessSystemDPI",
+          "valueType": "DWord", "value": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "interface.logon-acrylic",
+      "category": "interface",
+      "name": "Abilita sfocatura acrilica nella schermata di accesso",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+          "name": "DisableAcrylicBackgroundOnLogon", "valueType": "DWord", "value": 0, "revert": "snapshot" }
+      ]
+    },
+
+    {
+      "id": "gaming.mouse-accel-off",
+      "category": "gaming",
+      "name": "Disattiva accelerazione del mouse",
+      "description": "Rimuove 'Aumenta precisione puntatore'. Fondamentale per la mira nei giochi FPS: rende il movimento 1:1.",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Control Panel\\Mouse", "name": "MouseSpeed",
+          "valueType": "String", "value": "0", "default": "1", "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Control Panel\\Mouse", "name": "MouseThreshold1",
+          "valueType": "String", "value": "0", "default": "6", "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Control Panel\\Mouse", "name": "MouseThreshold2",
+          "valueType": "String", "value": "0", "default": "10", "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "gaming.game-dvr-off",
+      "category": "gaming",
+      "name": "Disattiva Game DVR",
+      "description": "La registrazione in background e' una delle cause piu' comuni di stutter e calo di FPS.",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\System\\GameConfigStore", "name": "GameDVR_Enabled",
+          "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR",
+          "name": "AllowGameDVR", "valueType": "DWord", "value": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "gaming.game-bar-off",
+      "category": "gaming",
+      "name": "Disattiva Game Bar",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\GameBar", "name": "ShowStartupPanel",
+          "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\GameBar", "name": "UseNexusForGameBarEnabled",
+          "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "gaming.game-mode-on",
+      "category": "gaming",
+      "name": "Attiva Modalita' gioco",
+      "description": "Windows da' priorita' al gioco in primo piano e sospende attivita' in background.",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\GameBar", "name": "AllowAutoGameMode",
+          "valueType": "DWord", "value": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\GameBar", "name": "AutoGameModeEnabled",
+          "valueType": "DWord", "value": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "gaming.fse-off",
+      "category": "gaming",
+      "name": "Disattiva ottimizzazioni schermo intero",
+      "description": "Forza fullscreen esclusivo invece del borderless composito. Riduce la latenza di input di circa un frame.",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\System\\GameConfigStore", "name": "GameDVR_FSEBehaviorMode",
+          "valueType": "DWord", "value": 2, "default": 0, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\System\\GameConfigStore", "name": "GameDVR_HonorUserFSEBehaviorMode",
+          "valueType": "DWord", "value": 1, "default": 0, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\System\\GameConfigStore", "name": "GameDVR_DXGIHonorFSEWindowsCompatible",
+          "valueType": "DWord", "value": 1, "default": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "gaming.mmcss-games-priority",
+      "category": "gaming",
+      "name": "Priorita' MMCSS massima per i giochi",
+      "description": "Alza la priorita' CPU/GPU che lo scheduler multimediale assegna al task 'Games'.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+          "name": "GPU Priority", "valueType": "DWord", "value": 8, "default": 8, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+          "name": "Priority", "valueType": "DWord", "value": 6, "default": 2, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+          "name": "Scheduling Category", "valueType": "String", "value": "High", "default": "Medium", "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+          "name": "SFIO Priority", "valueType": "String", "value": "High", "default": "Normal", "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+          "name": "Clock Rate", "valueType": "DWord", "value": 10000, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+          "name": "Affinity", "valueType": "DWord", "value": 0, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games",
+          "name": "Background Only", "valueType": "String", "value": "False", "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "gaming.kill-background-processes",
+      "category": "gaming",
+      "name": "Termina processi overlay/capture in background",
+      "description": "Chiude i moduli di cattura e overlay di AMD, Xbox e Discord che iniettano hook nei giochi.",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "process-kill",
+          "names": ["amdow", "AMDRSServ", "RadeonSoftware", "AMDNoiseSuppression", "cncmd", "RSServCmd", "GameBarPresenceWriter"],
+          "revert": "none",
+          "revertNote": "I processi ripartono da soli al riavvio o all'apertura del software vendor." }
+      ]
+    },
+    {
+      "id": "gaming.wsl-shutdown",
+      "category": "gaming",
+      "name": "Arresta WSL prima di giocare",
+      "description": "WSL2 riserva RAM e core CPU tramite la VM Hyper-V anche quando inattivo.",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "Chiude tutte le distribuzioni Linux in esecuzione. Non usare se hai lavoro aperto in WSL.",
+      "ops": [
+        { "type": "cmd", "exe": "wsl.exe", "args": ["--shutdown"], "revert": "none" },
+        { "type": "service", "name": "WSLService", "startup": "Manual", "stop": true, "revert": "snapshot" }
+      ]
+    },
+
+    {
+      "id": "performance.power-throttling-off",
+      "category": "performance",
+      "name": "Disattiva Power Throttling",
+      "description": "Impedisce a Windows di limitare la frequenza CPU dei processi in background.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "warning": "Su portatile riduce sensibilmente l'autonomia.",
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling",
+          "name": "PowerThrottlingOff", "valueType": "DWord", "value": 1, "default": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "performance.system-responsiveness",
+      "category": "performance",
+      "name": "Azzera riserva CPU per attivita' background",
+      "description": "SystemResponsiveness=0 toglie il 20% di CPU che MMCSS riserva ai task non multimediali. NetworkThrottlingIndex disattivato toglie il limite di 10k pacchetti/s.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
+          "name": "SystemResponsiveness", "valueType": "DWord", "value": 0, "default": 20, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile",
+          "name": "NetworkThrottlingIndex", "valueType": "DWord", "value": 4294967295, "default": 10, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "performance.services-manual",
+      "category": "performance",
+      "name": "Servizi non critici su Manuale",
+      "description": "Non li disabilita: passano a Manuale, quindi partono solo se qualcosa li richiede.",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "XblAuthManager/XblGameSave su Manuale possono rallentare il login ai giochi Xbox/Game Pass.",
+      "ops": [
+        { "type": "service", "startup": "Manual", "stop": false, "revert": "snapshot",
+          "names": ["AJRouter", "AssignedAccessManagerSvc", "diagnosticshub.standardcollector.service",
+                    "MapsBroker", "NetTcpPortSharing", "RemoteRegistry", "RetailDemo", "WerSvc",
+                    "WMPNetworkSvc", "XblAuthManager", "XblGameSave", "XboxGipSvc", "XboxNetApiSvc"] }
+      ]
+    },
+    {
+      "id": "performance.sysmain-off",
+      "category": "performance",
+      "name": "Disattiva SysMain (Superfetch)",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "Utile solo su SSD. Su HDD peggiora i tempi di caricamento.",
+      "condition": "storage.system-drive-is-ssd",
+      "ops": [
+        { "type": "service", "name": "SysMain", "startup": "Disabled", "stop": true, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "performance.search-indexing-off",
+      "category": "performance",
+      "name": "Disattiva indicizzazione Windows Search",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "La ricerca nel menu Start e in Explorer diventa molto piu' lenta.",
+      "ops": [
+        { "type": "service", "name": "WSearch", "startup": "Disabled", "stop": true, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "performance.maintenance-off",
+      "category": "performance",
+      "name": "Disattiva manutenzione automatica programmata",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "Blocca defrag/TRIM automatici e controlli di integrita' pianificati.",
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\Maintenance",
+          "name": "MaintenanceDisabled", "valueType": "DWord", "value": 1, "default": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "performance.hibernate-off",
+      "category": "performance",
+      "name": "Disattiva ibernazione",
+      "description": "Libera spazio su disco pari alla RAM installata (hiberfil.sys).",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "Disattiva anche l'avvio rapido di Windows.",
+      "ops": [
+        { "type": "cmd", "exe": "powercfg.exe", "args": ["-h", "off"],
+          "revert": "cmd", "revertExe": "powercfg.exe", "revertArgs": ["-h", "on"] }
+      ]
+    },
+    {
+      "id": "performance.background-apps-off",
+      "category": "performance",
+      "name": "Disattiva app in background",
+      "risk": "low", "admin": false, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications",
+          "name": "GlobalUserDisabled", "valueType": "DWord", "value": 1, "default": 0, "revert": "snapshot" },
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Search",
+          "name": "BackgroundAppGlobalToggle", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "performance.reserved-storage-off",
+      "category": "performance",
+      "name": "Disattiva spazio riservato",
+      "description": "Libera i ~7 GB che Windows riserva per gli aggiornamenti.",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "Gli aggiornamenti di funzionalita' possono fallire se il disco e' quasi pieno.",
+      "ops": [
+        { "type": "cmd", "exe": "dism.exe", "args": ["/Online", "/Set-ReservedStorageState", "/State:Disabled"],
+          "revert": "cmd", "revertExe": "dism.exe",
+          "revertArgs": ["/Online", "/Set-ReservedStorageState", "/State:Enabled"] }
+      ]
+    },
+    {
+      "id": "performance.storage-sense-off",
+      "category": "performance",
+      "name": "Disattiva Sensore memoria",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "reg", "path": "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\StorageSense\\Parameters\\StoragePolicy",
+          "name": "01", "valueType": "DWord", "value": 0, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "performance.power-plan-ultimate",
+      "category": "performance",
+      "name": "Attiva piano Prestazioni elevate/Ultimate",
+      "description": "Duplica e attiva Ultimate Performance; ripiega su High Performance se non disponibile.",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "Su portatile riduce molto l'autonomia. NON eliminiamo i piani predefiniti (Bilanciato, Risparmio energia) a differenza dell'originale: restano disponibili.",
+      "ops": [
+        { "type": "powerplan", "action": "duplicate-and-activate",
+          "sourceGuid": "e9a42b02-d5df-448d-aa00-03f14749eb61",
+          "fallbackGuid": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+          "revert": "snapshot",
+          "revertNote": "Ripristina il GUID del piano attivo prima della modifica." }
+      ]
+    },
+    {
+      "id": "performance.rebuild-perf-counters",
+      "category": "performance",
+      "name": "Ricostruisci contatori prestazioni",
+      "description": "Ripara i performance counter corrotti, causa di letture errate in monitoraggi e overlay.",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [
+        { "type": "cmd", "exe": "lodctr.exe", "args": ["/R"], "revert": "none" }
+      ]
+    },
+
+    {
+      "id": "gpu.msi-mode",
+      "category": "gpu",
+      "name": "Abilita MSI mode sulla GPU",
+      "description": "Passa la GPU da interrupt line-based a Message Signaled Interrupts. Riduce DPC latency e microstutter.",
+      "risk": "high", "admin": true, "reboot": true,
+      "warning": "Tocca le chiavi del dispositivo PCI. Su alcune configurazioni causa schermo nero all'avvio. Applicare solo con punto di ripristino attivo.",
+      "dynamic": "gpu-device-enum",
+      "ops": [
+        { "type": "reg-template",
+          "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\{PNPDeviceID}\\Device Parameters\\Interrupt Management\\MessageSignaledInterruptProperties",
+          "name": "MSISupported", "valueType": "DWord", "value": 1, "revert": "snapshot" },
+        { "type": "reg-template",
+          "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\{PNPDeviceID}\\Device Parameters\\Interrupt Management\\Affinity Policy",
+          "name": "DevicePriority", "valueType": "DWord", "value": 3, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "gpu.hags",
+      "category": "gpu",
+      "name": "Abilita Hardware Accelerated GPU Scheduling",
+      "description": "Delega la schedulazione della VRAM alla GPU. Prerequisito per NVIDIA Reflex e riduce la latenza.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers",
+          "name": "HwSchMode", "valueType": "DWord", "value": 2, "default": 1, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "gpu.dxgkrnl-latency",
+      "category": "gpu",
+      "name": "Azzera tolleranza latenza monitor (DXGKrnl)",
+      "description": "Impedisce al driver grafico di entrare in stati a bassa potenza tra i frame.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\DXGKrnl",
+          "name": "MonitorLatencyTolerance", "valueType": "DWord", "value": 0, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\DXGKrnl",
+          "name": "MonitorRefreshLatencyTolerance", "valueType": "DWord", "value": 0, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "gpu.per-core-dpc",
+      "category": "gpu",
+      "name": "DPC per core CPU (NVIDIA)",
+      "description": "Distribuisce le DPC del driver NVIDIA su piu' core invece di concentrarle sul core 0.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "vendor": "nvidia",
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers",
+          "name": "RmGpsPsEnablePerCpuCoreDpc", "valueType": "DWord", "value": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\\Power",
+          "name": "RmGpsPsEnablePerCpuCoreDpc", "valueType": "DWord", "value": 1, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\nvlddmkm",
+          "name": "RmGpsPsEnablePerCpuCoreDpc", "valueType": "DWord", "value": 1, "revert": "snapshot", "skipIfKeyMissing": true },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\nvlddmkm\\NVAPI",
+          "name": "RmGpsPsEnablePerCpuCoreDpc", "valueType": "DWord", "value": 1, "revert": "snapshot", "skipIfKeyMissing": true },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\nvlddmkm\\Global\\NVTweak",
+          "name": "RmGpsPsEnablePerCpuCoreDpc", "valueType": "DWord", "value": 1, "revert": "snapshot", "skipIfKeyMissing": true }
+      ]
+    },
+    {
+      "id": "gpu.gpu-energy-driver-off",
+      "category": "gpu",
+      "name": "Disattiva driver GPU Energy Driver",
+      "description": "Servizio di telemetria energetica della GPU, non necessario al rendering.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\GpuEnergyDrv",
+          "name": "Start", "valueType": "DWord", "value": 4, "default": 3, "revert": "snapshot", "skipIfKeyMissing": true }
+      ]
+    },
+    {
+      "id": "gpu.amd-ulps-off",
+      "category": "gpu",
+      "name": "Disattiva ULPS (AMD)",
+      "description": "Ultra Low Power State: impedisce alla GPU di scendere in stato a bassissima potenza, riducendo lo stutter al risveglio.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "vendor": "amd",
+      "dynamic": "amd-driver-key-enum",
+      "ops": [
+        { "type": "reg-template",
+          "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\{DriverIndex}",
+          "names": ["EnableUlps", "EnableUlps_NA"], "valueType": "DWord", "value": 0,
+          "revert": "snapshot", "skipIfValueMissing": true }
+      ]
+    },
+    {
+      "id": "gpu.nvidia-control-panel-profile",
+      "category": "gpu",
+      "name": "Profilo NVIDIA Control Panel competitivo",
+      "description": "Impostazioni globali del pannello NVIDIA orientate alla latenza minima.",
+      "note": "I valori applicati vivono in data/nvidia-profiles.json, profilo 'competitive': quello e' l'unico riferimento autorevole. Il blocco 'settings' qui sotto e' documentazione leggibile e non viene letto dal motore.",
+      "warning": "Richiede NVIDIA Profile Inspector, non distribuito con WinBoost. Senza, l'operazione viene saltata.",
+      "risk": "medium", "admin": true, "reboot": false,
+      "vendor": "nvidia",
+      "ops": [
+        { "type": "nvapi-profile", "profile": "competitive", "revert": "snapshot",
+          "revertNote": "Esporta il profilo Base corrente prima di applicare; il rollback lo reimporta." }
+      ],
+      "settings": {
+        "Power management mode": { "value": 1, "meaning": "Prefer maximum performance - la GPU non scala le frequenze" },
+        "Maximum pre-rendered frames": { "value": 0, "meaning": "Low Latency Mode gestito dal driver" },
+        "Vertical Sync": { "value": "off", "raw": 1620202130, "meaning": "V-Sync disattivato globalmente" },
+        "Vertical Sync Tear Control": { "value": "adaptive", "raw": 2525368439 },
+        "Threaded optimization": { "value": 0, "meaning": "Off - evita stutter da thread aggiuntivi in alcuni engine" },
+        "Triple buffering": { "value": 0, "meaning": "Off - riduce la latenza in OpenGL" },
+        "Shader Cache": { "value": 1, "meaning": "Attiva" },
+        "Shader disk cache maximum size": { "value": 4096, "meaning": "4 GB, riduce lo stutter da compilazione shader" },
+        "Texture filtering - Quality": { "value": 20, "meaning": "High performance" },
+        "Texture filtering - Trilinear optimization": { "value": 0 },
+        "Texture filtering - Anisotropic sample optimization": { "value": 0 },
+        "Texture filtering - Negative LOD bias": { "value": 0, "meaning": "Clamp" },
+        "Anisotropic filtering setting": { "value": 1 },
+        "Ambient Occlusion": { "value": 0, "meaning": "Off" },
+        "Enable FXAA": { "value": 0, "meaning": "Off - l'antialiasing lo gestisce il gioco" },
+        "Antialiasing - Mode": { "value": 0, "meaning": "Application controlled" },
+        "Enable sample interleaving (MFAA)": { "value": 0 },
+        "G-SYNC": { "value": 4 },
+        "Variable refresh Rate": { "value": 1, "meaning": "Attivo" },
+        "Enable G-SYNC globally": { "value": 0, "meaning": "Solo fullscreen" },
+        "Display the VRR Overlay Indicator": { "value": 1 },
+        "Frame Rate Limiter": { "value": 0, "meaning": "Nessun limite dal driver" },
+        "Vulkan/OpenGL present method": { "value": 2, "meaning": "Prefer layered on DXGI swapchain" },
+        "Enable overlay": { "value": 0, "meaning": "Overlay NVIDIA disattivato" }
+      }
+    },
+    {
+      "id": "gpu.amd-adrenalin-competitive",
+      "category": "gpu",
+      "name": "Preset Adrenalin competitivo (AMD)",
+      "description": "Impostazioni globali Radeon via SDK ADLX ufficiale.",
+      "risk": "medium", "admin": true, "reboot": false,
+      "vendor": "amd",
+      "ops": [ { "type": "adlx-preset", "preset": "competitive", "revert": "snapshot" } ],
+      "settings": {
+        "Radeon Anti-Lag": { "value": true, "meaning": "Attivo - riduce la latenza di input" },
+        "Radeon Chill": { "value": false, "meaning": "Off - limiterebbe gli FPS" },
+        "Radeon Boost": { "value": false, "meaning": "Off - degrada la risoluzione in movimento" },
+        "Radeon Super Resolution": { "value": false },
+        "Frame Rate Target Control": { "value": false },
+        "AMD Fluid Motion Frames": { "value": false, "meaning": "Off - la frame generation aggiunge latenza" },
+        "Enhanced Sync": { "value": false },
+        "Image Sharpening": { "value": false },
+        "Anti-Aliasing": { "value": "use application settings" },
+        "Morphological Anti-Aliasing": { "value": false },
+        "Tessellation": { "value": "AMD optimized" }
+      }
+    },
+
+    {
+      "id": "network.tcp-latency",
+      "category": "network",
+      "name": "Tweak stack TCP per bassa latenza",
+      "description": "Disattiva heuristics, ECN e timestamp; abilita RSS e CTCP.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "warning": "autotuninglevel e congestionprovider possono ridurre il throughput su connessioni ad alta latenza/banda (fibra a lunga distanza, satellite).",
+      "ops": [
+        { "type": "cmd", "exe": "netsh.exe", "args": ["int","tcp","set","global","autotuninglevel=normal"],
+          "revert": "cmd", "revertArgs": ["int","tcp","set","global","autotuninglevel=normal"] },
+        { "type": "cmd", "exe": "netsh.exe", "args": ["int","tcp","set","heuristics","disabled"],
+          "revert": "cmd", "revertArgs": ["int","tcp","set","heuristics","default"] },
+        { "type": "cmd", "exe": "netsh.exe", "args": ["int","tcp","set","global","rss=enabled"],
+          "revert": "cmd", "revertArgs": ["int","tcp","set","global","rss=default"] },
+        { "type": "cmd", "exe": "netsh.exe", "args": ["int","tcp","set","global","ecncapability=disabled"],
+          "revert": "cmd", "revertArgs": ["int","tcp","set","global","ecncapability=default"] },
+        { "type": "cmd", "exe": "netsh.exe", "args": ["int","tcp","set","global","timestamps=disabled"],
+          "revert": "cmd", "revertArgs": ["int","tcp","set","global","timestamps=default"] },
+        { "type": "cmd", "exe": "netsh.exe", "args": ["int","tcp","set","global","initialRto=2000"],
+          "revert": "cmd", "revertArgs": ["int","tcp","set","global","initialRto=3000"] },
+        { "type": "cmd", "exe": "netsh.exe", "args": ["int","tcp","set","supplemental","template=internet","congestionprovider=ctcp"],
+          "continueOnError": true,
+          "revert": "cmd", "revertArgs": ["int","tcp","set","supplemental","template=internet","congestionprovider=cubic"] }
+      ]
+    },
+    {
+      "id": "network.tcp-registry",
+      "category": "network",
+      "name": "Parametri TCP/IP di registro",
+      "risk": "medium", "admin": true, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+          "name": "TcpMaxConnectRetransmissions", "valueType": "DWord", "value": 2, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+          "name": "MaxUserPort", "valueType": "DWord", "value": 65534, "default": 16384, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+          "name": "TcpTimedWaitDelay", "valueType": "DWord", "value": 30, "default": 120, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\Psched",
+          "name": "NonBestEffortLimit", "valueType": "DWord", "value": 0, "default": 20,
+          "revert": "snapshot", "note": "Rimuove il 20% di banda riservato da QoS Packet Scheduler." }
+      ]
+    },
+    {
+      "id": "network.service-provider-priority",
+      "category": "network",
+      "name": "Priorita' risoluzione nomi",
+      "description": "Fa consultare hosts e DNS prima di NetBIOS.",
+      "risk": "low", "admin": true, "reboot": true,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\ServiceProvider",
+          "name": "LocalPriority", "valueType": "DWord", "value": 4, "default": 499, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\ServiceProvider",
+          "name": "HostPriority", "valueType": "DWord", "value": 5, "default": 500, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\ServiceProvider",
+          "name": "DnsPriority", "valueType": "DWord", "value": 6, "default": 2000, "revert": "snapshot" },
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\ServiceProvider",
+          "name": "NetbtPriority", "valueType": "DWord", "value": 7, "default": 2001, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "network.nagle-off",
+      "category": "network",
+      "name": "Disattiva algoritmo di Nagle",
+      "description": "TcpAckFrequency=1 e TCPNoDelay=1 fanno inviare subito i pacchetti piccoli invece di accorparli. Il tweak piu' rilevante per la latenza nei giochi online.",
+      "risk": "medium", "admin": true, "reboot": true,
+      "warning": "Aumenta leggermente il numero di pacchetti; su reti congestionate puo' essere controproducente.",
+      "dynamic": "netadapter-guid-enum",
+      "ops": [
+        { "type": "reg-template",
+          "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{InterfaceGuid}",
+          "name": "TcpAckFrequency", "valueType": "DWord", "value": 1, "default": 2, "revert": "snapshot" },
+        { "type": "reg-template",
+          "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{InterfaceGuid}",
+          "name": "TCPNoDelay", "valueType": "DWord", "value": 1, "default": 0, "revert": "snapshot" },
+        { "type": "reg-template",
+          "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\{InterfaceGuid}",
+          "name": "TcpDelAckTicks", "valueType": "DWord", "value": 0, "default": 2, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "network.adapter-offload",
+      "category": "network",
+      "name": "Ottimizza offload scheda di rete",
+      "description": "Disattiva RSC e Large Send Offload, che accorpano pacchetti aggiungendo latenza. Mantiene attivo il checksum offload.",
+      "risk": "medium", "admin": true, "reboot": false,
+      "dynamic": "netadapter-enum",
+      "ops": [
+        { "type": "netadapter-rsc", "enabled": false, "revert": "snapshot" },
+        { "type": "netadapter-property", "pattern": "Large Send Offload*", "value": "Disabled", "revert": "snapshot" },
+        { "type": "netadapter-property", "pattern": "TCP Checksum Offload*", "value": "Enabled", "revert": "snapshot" },
+        { "type": "cmd", "exe": "netsh.exe", "args": ["interface","ipv4","set","subinterface","{AdapterName}","mtu=1500","store=persistent"],
+          "continueOnError": true, "revert": "snapshot" }
+      ]
+    },
+    {
+      "id": "network.ipv6-off",
+      "category": "network",
+      "name": "Disattiva IPv6",
+      "risk": "high", "admin": true, "reboot": true,
+      "warning": "Puo' rompere VPN, Xbox Live/Game Pass, Teredo e provider che operano IPv6-only. Non consigliato salvo problemi accertati.",
+      "enabledByDefault": false,
+      "ops": [
+        { "type": "reg", "path": "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters",
+          "name": "DisabledComponents", "valueType": "DWord", "value": 32, "default": 0, "revert": "snapshot",
+          "note": "32 = preferisci IPv4 a IPv6, non disattiva IPv6 del tutto." }
+      ]
+    },
+    {
+      "id": "network.teredo-off",
+      "category": "network",
+      "name": "Disattiva Teredo",
+      "risk": "medium", "admin": true, "reboot": false,
+      "warning": "Teredo serve al NAT traversal di Xbox Live. Disattivarlo puo' peggiorare il matchmaking su alcuni titoli.",
+      "enabledByDefault": false,
+      "ops": [
+        { "type": "cmd", "exe": "netsh.exe", "args": ["interface","teredo","set","state","disabled"],
+          "revert": "cmd", "revertArgs": ["interface","teredo","set","state","default"] }
+      ]
+    },
+    {
+      "id": "network.dns-custom",
+      "category": "network",
+      "name": "Imposta DNS personalizzati",
+      "description": "L'originale forza Cloudflare senza chiedere. Qui il provider e' scelto dall'utente e l'impostazione precedente viene salvata.",
+      "risk": "medium", "admin": true, "reboot": false,
+      "enabledByDefault": false,
+      "parameters": {
+        "provider": {
+          "type": "choice", "default": "keep",
+          "choices": {
+            "keep":       { "label": "Non modificare", "servers": null },
+            "cloudflare": { "label": "Cloudflare",     "servers": ["1.1.1.1", "1.0.0.1"] },
+            "google":     { "label": "Google",         "servers": ["8.8.8.8", "8.8.4.4"] },
+            "quad9":      { "label": "Quad9 (filtra malware)", "servers": ["9.9.9.9", "149.112.112.112"] },
+            "dhcp":       { "label": "Torna a DHCP",   "servers": [] }
+          }
+        }
+      },
+      "ops": [ { "type": "dns", "revert": "snapshot" } ]
+    },
+
+    {
+      "id": "debloat.remove-appx",
+      "category": "debloat",
+      "name": "Rimuovi app preinstallate",
+      "risk": "high", "admin": true, "reboot": false,
+      "warning": "La rimozione di pacchetti provisioned e' permanente per i nuovi utenti. Reinstallabili dallo Store singolarmente.",
+      "parameters": {
+        "packages": {
+          "type": "multi-select",
+          "default": ["Microsoft.BingNews", "Microsoft.BingWeather", "Microsoft.GetHelp",
+                      "Microsoft.Getstarted", "Microsoft.MicrosoftOfficeHub",
+                      "Microsoft.MicrosoftSolitaireCollection", "Microsoft.People",
+                      "Microsoft.PowerAutomateDesktop", "Microsoft.Todos",
+                      "Microsoft.WindowsFeedbackHub", "Microsoft.YourPhone",
+                      "Microsoft.ZuneMusic", "Microsoft.ZuneVideo"],
+          "available": ["Microsoft.Xbox.TCUI", "Microsoft.XboxApp", "Microsoft.XboxGameOverlay",
+                        "Microsoft.XboxGamingOverlay", "Microsoft.XboxIdentityProvider",
+                        "Microsoft.XboxSpeechToTextOverlay"],
+          "note": "I pacchetti Xbox sono esclusi dal default: XboxIdentityProvider serve al login di molti giochi PC Game Pass."
+        }
+      },
+      "ops": [ { "type": "appx-remove", "revert": "none",
+                 "revertNote": "Reinstallazione manuale dallo Store. Registrare i pacchetti rimossi nel log." } ]
+    },
+    {
+      "id": "debloat.remove-onedrive",
+      "category": "debloat",
+      "name": "Disinstalla OneDrive",
+      "risk": "high", "admin": true, "reboot": false,
+      "warning": "Verificare che i file siano sincronizzati e disponibili in locale prima di procedere.",
+      "enabledByDefault": false,
+      "ops": [
+        { "type": "uninstaller", "candidates": ["%SystemRoot%\\SysWOW64\\OneDriveSetup.exe",
+                                                 "%SystemRoot%\\System32\\OneDriveSetup.exe"],
+          "args": ["/uninstall"], "killFirst": ["OneDrive"], "revert": "none" }
+      ]
+    },
+    {
+      "id": "debloat.remove-edge",
+      "category": "debloat",
+      "name": "Disinstalla Microsoft Edge",
+      "risk": "high", "admin": true, "reboot": false,
+      "warning": "Edge e' un componente di sistema: la rimozione forzata puo' rompere il rendering di alcune finestre di Windows (widget, ricerca, PWA) e viene ripristinata dagli aggiornamenti cumulativi.",
+      "enabledByDefault": false,
+      "ops": [
+        { "type": "uninstaller", "discover": "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\**\\setup.exe",
+          "args": ["--uninstall", "--system-level", "--verbose-logging", "--force-uninstall"],
+          "revert": "none" }
+      ]
+    },
+
+    {
+      "id": "cleanup.user-temp",
+      "category": "cleanup",
+      "name": "Svuota cartella temporanea utente",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [ { "type": "clear-dir", "path": "%TEMP%", "revert": "none" } ]
+    },
+    {
+      "id": "cleanup.disk-cleanup",
+      "category": "cleanup",
+      "name": "Esegui Pulizia disco",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [ { "type": "cmd", "exe": "cleanmgr.exe", "args": ["/sagerun:1"], "revert": "none" } ]
+    },
+    {
+      "id": "cleanup.shader-cache",
+      "category": "cleanup",
+      "name": "Svuota cache shader",
+      "description": "Cache DirectX, NVIDIA, AMD e dei giochi. Utile dopo un aggiornamento driver o per risolvere stutter da shader corrotti.",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [
+        { "type": "clear-dir", "path": "%LOCALAPPDATA%\\D3DSCache", "revert": "none" },
+        { "type": "clear-dir", "path": "%LOCALAPPDATA%\\NVIDIA\\DXCache", "revert": "none" },
+        { "type": "clear-dir", "path": "%LOCALAPPDATA%\\NVIDIA\\GLCache", "revert": "none" },
+        { "type": "clear-dir", "path": "%LOCALAPPDATA%\\AMD\\DxCache", "revert": "none" },
+        { "type": "clear-dir", "path": "%LOCALAPPDATA%\\AMD\\GLCache", "revert": "none" }
+      ]
+    },
+
+    {
+      "id": "installs.vcredist",
+      "category": "installs",
+      "name": "Installa Visual C++ Redistributable",
+      "description": "Runtime 2005-2022, x86 e x64. Dipendenza di quasi tutti i giochi PC.",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [
+        { "type": "winget", "id": "Microsoft.VCRedist.2015+.x64", "revert": "none" },
+        { "type": "winget", "id": "Microsoft.VCRedist.2015+.x86", "revert": "none" },
+        { "type": "winget", "id": "Microsoft.VCRedist.2013.x64", "revert": "none" },
+        { "type": "winget", "id": "Microsoft.VCRedist.2013.x86", "revert": "none" },
+        { "type": "winget", "id": "Microsoft.VCRedist.2012.x64", "revert": "none" },
+        { "type": "winget", "id": "Microsoft.VCRedist.2012.x86", "revert": "none" },
+        { "type": "winget", "id": "Microsoft.VCRedist.2010.x64", "revert": "none" },
+        { "type": "winget", "id": "Microsoft.VCRedist.2010.x86", "revert": "none" }
+      ],
+      "fallbackNote": "Se winget non e' disponibile, scaricare da https://aka.ms/vc14/vc_redist.x64.exe e equivalenti Microsoft ufficiali."
+    },
+    {
+      "id": "installs.directx-legacy",
+      "category": "installs",
+      "name": "Installa DirectX End-User Runtime (legacy)",
+      "description": "Librerie D3DX9/10/11 e XAudio richieste dai giochi meno recenti.",
+      "note": "Passa da winget invece di scaricare ed eseguire un installer da URL: il pacchetto e' verificato dal gestore, e non serve un percorso 'scarica ed esegui' nel motore.",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [
+        { "type": "winget", "id": "Microsoft.DirectX", "revert": "none" }
+      ],
+      "fallbackNote": "Senza winget, scaricare il DirectX End-User Runtime dal sito Microsoft ufficiale."
+    },
+
+    {
+      "id": "updates.winget",
+      "category": "updates",
+      "name": "Aggiorna app via winget",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [ { "type": "winget-upgrade-all", "revert": "none" } ]
+    },
+    {
+      "id": "updates.store",
+      "category": "updates",
+      "name": "Aggiorna app Microsoft Store",
+      "risk": "low", "admin": false, "reboot": false,
+      "ops": [ { "type": "store-update", "revert": "none" } ]
+    },
+    {
+      "id": "updates.windows",
+      "category": "updates",
+      "name": "Cerca aggiornamenti Windows disponibili",
+      "description": "Elenca gli aggiornamenti in sospeso senza installarli.",
+      "note": "Deliberatamente solo ricerca: installare aggiornamenti senza sorveglianza, con i riavvii che comportano, non e' una decisione che uno strumento di ottimizzazione debba prendere al posto dell'utente. L'installazione resta in Impostazioni > Windows Update.",
+      "risk": "low", "admin": true, "reboot": false,
+      "ops": [ { "type": "windows-update", "revert": "none" } ]
+    }
+  ]
+}

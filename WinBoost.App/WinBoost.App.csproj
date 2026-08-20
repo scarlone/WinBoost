@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <LangVersion>latest</LangVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>WinBoost</AssemblyName>
+    <RootNamespace>WinBoost.App</RootNamespace>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WinBoost.Core\WinBoost.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Il catalogo e' incorporato, non affiancato: pilota un processo che scrive
+         in HKLM da amministratore, quindi non deve essere sostituibile da chi ha
+         accesso in scrittura alla cartella di installazione.
+         Per sviluppare basta modificare data/tweaks.json e ricompilare: MSBuild
+         rileva la modifica e riembedda la risorsa. -->
+    <EmbeddedResource Include="..\data\tweaks.json" LogicalName="WinBoost.tweaks.json" />
+    <EmbeddedResource Include="..\data\nvidia-profiles.json" LogicalName="WinBoost.nvidia-profiles.json" />
+  </ItemGroup>
+
+</Project>

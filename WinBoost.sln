@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinBoost.Core", "WinBoost.Core\WinBoost.Core.csproj", "{CE8E1DA1-CA3C-4D6E-8050-D3669DF29AA2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinBoost.App", "WinBoost.App\WinBoost.App.csproj", "{31E8876A-427E-4F17-B1E1-EC62A7DFF98D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinBoost.Tests", "WinBoost.Tests\WinBoost.Tests.csproj", "{D875BDC5-22DB-4AF9-AB83-53EF0D51C93F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE8E1DA1-CA3C-4D6E-8050-D3669DF29AA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE8E1DA1-CA3C-4D6E-8050-D3669DF29AA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE8E1DA1-CA3C-4D6E-8050-D3669DF29AA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE8E1DA1-CA3C-4D6E-8050-D3669DF29AA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31E8876A-427E-4F17-B1E1-EC62A7DFF98D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31E8876A-427E-4F17-B1E1-EC62A7DFF98D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31E8876A-427E-4F17-B1E1-EC62A7DFF98D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31E8876A-427E-4F17-B1E1-EC62A7DFF98D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D875BDC5-22DB-4AF9-AB83-53EF0D51C93F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D875BDC5-22DB-4AF9-AB83-53EF0D51C93F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D875BDC5-22DB-4AF9-AB83-53EF0D51C93F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D875BDC5-22DB-4AF9-AB83-53EF0D51C93F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

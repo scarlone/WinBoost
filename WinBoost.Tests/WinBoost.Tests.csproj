@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.6.6" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WinBoost.Core\WinBoost.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- I test girano contro il catalogo reale, non contro una copia divergente. -->
+    <None Include="..\data\tweaks.json" Link="data\tweaks.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\data\nvidia-profiles.json" Link="data\nvidia-profiles.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

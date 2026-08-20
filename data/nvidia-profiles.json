@@ -1,0 +1,439 @@
+{
+    "schemaVersion":  1,
+    "source":  "SettingID, ValueType e SettingValue estratti da un file .nip reale e funzionante, non ricostruiti a memoria. SettingNameInfo e\u0027 informativo: NVIDIA Profile Inspector applica in base a SettingID.",
+    "profiles":  [
+                     {
+                         "id":  "competitive",
+                         "profileName":  "Base Profile",
+                         "description":  "Impostazioni globali NVIDIA orientate alla latenza minima.",
+                         "settings":  [
+                                          {
+                                              "id":  1675263,
+                                              "name":  "Shader Cache",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  1686376,
+                                              "name":  "Texture filtering - Negative LOD bias",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  3066610,
+                                              "name":  "Texture filtering - Trilinear optimization",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  5912412,
+                                              "name":  "Vertical Sync Tear Control",
+                                              "type":  "Dword",
+                                              "value":  "2525368439"
+                                          },
+                                          {
+                                              "id":  6600001,
+                                              "name":  "Preferred refresh rate",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  6701881,
+                                              "name":  "NVIDIA Predefined Ambient Occlusion Usage",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  6714153,
+                                              "name":  "Ambient Occlusion",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  8102046,
+                                              "name":  "Maximum pre-rendered frames",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  8703344,
+                                              "name":  "Texture filtering - Anisotropic filter optimization",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  10011052,
+                                              "name":  "Enable sample interleaving (MFAA)",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  11041231,
+                                              "name":  "Vertical Sync",
+                                              "type":  "Dword",
+                                              "value":  "1620202130"
+                                          },
+                                          {
+                                              "id":  11306135,
+                                              "name":  "Shader disk cache maximum size",
+                                              "type":  "Dword",
+                                              "value":  "4096"
+                                          },
+                                          {
+                                              "id":  13510289,
+                                              "name":  "Texture filtering - Quality",
+                                              "type":  "Dword",
+                                              "value":  "20"
+                                          },
+                                          {
+                                              "id":  15151633,
+                                              "name":  "Texture filtering - Anisotropic sample optimization",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  269553971,
+                                              "name":  "Virtual Reality pre-rendered frames",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  270198627,
+                                              "name":  "Flag to control smooth AFR behavior",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  270426537,
+                                              "name":  "Anisotropic filtering setting",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  271085649,
+                                              "name":  "SLI indicator",
+                                              "type":  "Dword",
+                                              "value":  "877871204"
+                                          },
+                                          {
+                                              "id":  271830721,
+                                              "name":  "NVIDIA predefined SLI mode",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  271830722,
+                                              "name":  "NVIDIA predefined SLI mode on DirectX 10",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  271830737,
+                                              "name":  "SLI rendering mode",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  271834321,
+                                              "name":  "Number of GPUs to use on SLI rendering mode",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  271834322,
+                                              "name":  "NVIDIA predefined number of GPUs to use on SLI rendering mode",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  271834323,
+                                              "name":  "NVIDIA predefined number of GPUs to use on SLI rendering mode on DirectX 10",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  271895433,
+                                              "name":  "NVIDIA Predefined FXAA Usage",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  271929336,
+                                              "name":  "List of Universal GPU ids",
+                                              "type":  "String",
+                                              "value":  "none"
+                                          },
+                                          {
+                                              "id":  272354485,
+                                              "name":  "No override of Anisotropic filtering",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  272909380,
+                                              "name":  "NVIDIA Quality upscaling",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  272979126,
+                                              "name":  "Application Profile Notification Popup Timeout",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  274197361,
+                                              "name":  "Power management mode",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  275602687,
+                                              "name":  "Do not display this profile in the Control Panel",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  276089202,
+                                              "name":  "Enable FXAA",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  276495451,
+                                              "name":  "Antialiasing - SLI AA",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  276652957,
+                                              "name":  "Antialiasing - Gamma correction",
+                                              "type":  "Dword",
+                                              "value":  "2"
+                                          },
+                                          {
+                                              "id":  276757595,
+                                              "name":  "Antialiasing - Mode",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  277041154,
+                                              "name":  "Frame Rate Limiter",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  278196567,
+                                              "name":  "Toggle the VRR global feature",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  278196591,
+                                              "name":  "Display the PhysX indicator",
+                                              "type":  "Dword",
+                                              "value":  "877871204"
+                                          },
+                                          {
+                                              "id":  278196727,
+                                              "name":  "VRR requested state",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  278262127,
+                                              "name":  "Display the VRR Overlay Indicator",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  279476686,
+                                              "name":  "Variable refresh Rate",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  279476687,
+                                              "name":  "G-SYNC",
+                                              "type":  "Dword",
+                                              "value":  "4"
+                                          },
+                                          {
+                                              "id":  282245910,
+                                              "name":  "Anisotropic filtering mode",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  282364549,
+                                              "name":  "Antialiasing - Transparency Supersampling",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  282555346,
+                                              "name":  "Antialiasing - Setting",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  283958146,
+                                              "name":  "Antialiasing - Behavior Flags",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  284810368,
+                                              "name":  "Optimus flags for enabled applications",
+                                              "type":  "Dword",
+                                              "value":  "16"
+                                          },
+                                          {
+                                              "id":  284810369,
+                                              "name":  "Enable application for Optimus",
+                                              "type":  "Dword",
+                                              "value":  "16"
+                                          },
+                                          {
+                                              "id":  284810372,
+                                              "name":  "Shim Rendering Mode Options per application for Optimus",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  284962204,
+                                              "name":  "Antialiasing - Transparency Multisampling",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  286335539,
+                                              "name":  "Memory Allocation Policy",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  288568115,
+                                              "name":  "Stereo - swap mode",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  294973784,
+                                              "name":  "Enable G-SYNC globally",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  296394393,
+                                              "name":  "Stereo - Enable",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  296633180,
+                                              "name":  "Stereo - Swap eyes",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  300489313,
+                                              "name":  "Stereo - Display mode",
+                                              "type":  "Dword",
+                                              "value":  "4294967295"
+                                          },
+                                          {
+                                              "id":  538927519,
+                                              "name":  "Buffer-flipping mode",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  541956620,
+                                              "name":  "Force Stereo shuttering",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  543959236,
+                                              "name":  "Enable overlay",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  544392611,
+                                              "name":  "OpenGL GDI compatibility",
+                                              "type":  "Dword",
+                                              "value":  "2"
+                                          },
+                                          {
+                                              "id":  544543941,
+                                              "name":  "",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  545898348,
+                                              "name":  "Antialiasing - Line gamma",
+                                              "type":  "Dword",
+                                              "value":  "16"
+                                          },
+                                          {
+                                              "id":  546816758,
+                                              "name":  "Deep color for 3D applications",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  547022447,
+                                              "name":  "Exported Overlay pixel types",
+                                              "type":  "Dword",
+                                              "value":  "1"
+                                          },
+                                          {
+                                              "id":  547524693,
+                                              "name":  "Unified back/depth buffer",
+                                              "type":  "Dword",
+                                              "value":  "4294967295"
+                                          },
+                                          {
+                                              "id":  549528094,
+                                              "name":  "Threaded optimization",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  550564838,
+                                              "name":  "Preferred OpenGL GPU",
+                                              "type":  "String",
+                                              "value":  "autoselect"
+                                          },
+                                          {
+                                              "id":  550932728,
+                                              "name":  "Vulkan/OpenGL present method",
+                                              "type":  "Dword",
+                                              "value":  "2"
+                                          },
+                                          {
+                                              "id":  553505273,
+                                              "name":  "Triple buffering",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  553612435,
+                                              "name":  "Extension String version",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          },
+                                          {
+                                              "id":  4294967295,
+                                              "name":  "",
+                                              "type":  "Dword",
+                                              "value":  "0"
+                                          }
+                                      ]
+                     }
+                 ]
+}

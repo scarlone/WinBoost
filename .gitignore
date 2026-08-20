@@ -1,0 +1,17 @@
+# Output di compilazione
+bin/
+obj/
+publish/
+TestResults/
+
+# File utente di Visual Studio / Rider
+.vs/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.DotSettings.user
+
+# Artefatti locali
+*.nip
+!data/*.nip
