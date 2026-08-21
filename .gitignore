@@ -15,3 +15,6 @@ TestResults/
 # Artefatti locali
 *.nip
 !data/*.nip
+
+# Manifest winget rigenerati in locale da update-winget.ps1
+packaging/winget/generated/

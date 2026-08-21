@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.installer.1.28.0.schema.json
+PackageIdentifier: scarlone.WinBoost
+PackageVersion: 0.1.0
+InstallerLocale: en-US
+Platform:
+- Windows.Desktop
+# winget stesso richiede Windows 10 1809: dichiarare meno sarebbe una promessa vuota.
+MinimumOSVersion: 10.0.17763.0
+# "portable": winget copia l'exe in %LOCALAPPDATA%\Microsoft\WinGet\Packages e crea
+# l'alias qui sotto. Niente installer da scrivere ne' Program Files da toccare.
+InstallerType: portable
+# L'alias con cui l'exe e' invocabile da terminale dopo l'installazione. Ha senso
+# anche per un'app WPF: WinBoost accetta argomenti a riga di comando
+# (--catalog, --profile-inspector), quindi "winboost --catalog x.json" e' un uso reale.
+Commands:
+- winboost
+# Su winget va il profilo framework-dependent (~0,6 MB): il runtime lo installa
+# winget come dipendenza, non ha senso far scaricare 68 MB di runtime incorporato.
+Dependencies:
+  PackageDependencies:
+  - PackageIdentifier: Microsoft.DotNet.DesktopRuntime.8
+Installers:
+- Architecture: x64
+  InstallerUrl: https://github.com/scarlone/WinBoost/releases/download/v0.1.0/WinBoost-0.1.0-win-x64-framework.exe
+  # SEGNAPOSTO: la release v0.1.0 non esiste ancora. Sostituire con lo SHA256 reale
+  # dell'asset (e' in SHA256SUMS.txt accanto al binario) prima di aprire la PR.
+  # 64 zeri: passa la validazione dello schema ma nessun file ha questo hash,
+  # quindi un submit per errore fallirebbe comunque in pipeline.
+  InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+ManifestType: installer
+ManifestVersion: 1.28.0
