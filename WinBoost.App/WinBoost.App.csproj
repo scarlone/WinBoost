@@ -2,16 +2,12 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <LangVersion>latest</LangVersion>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>WinBoost</AssemblyName>
     <RootNamespace>WinBoost.App</RootNamespace>
-    <Version>0.1.0</Version>
+    <!-- Punta al manifest generato in obj/, non a quello in repo: vedi il target
+         GeneraManifestVersionato piu' sotto. -->
+    <ApplicationManifest>$(BaseIntermediateOutputPath)app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,5 +23,30 @@
     <EmbeddedResource Include="..\data\tweaks.json" LogicalName="WinBoost.tweaks.json" />
     <EmbeddedResource Include="..\data\nvidia-profiles.json" LogicalName="WinBoost.nvidia-profiles.json" />
   </ItemGroup>
+
+  <!-- Lo schema del manifest rende obbligatorio l'attributo version di assemblyIdentity
+       e MSBuild non vi sostituisce nulla: un numero scritto a mano divergerebbe in
+       silenzio da $(Version). Un target di sola verifica non basta: la CI sovrascrive
+       la versione dalla tag con -p:Version, che il manifest committato non puo'
+       conoscere in anticipo. Quindi il manifest embedato viene generato qui,
+       rimpiazzando la sentinella 0.0.0.0 di app.manifest con la versione effettiva. -->
+  <Target Name="GeneraManifestVersionato" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <!-- Il manifest vuole quattro numeri: via l'eventuale suffisso prerelease,
+           revision a 0 se assente. -->
+      <_VersioneBase>$(Version.Split('-')[0].Split('+')[0])</_VersioneBase>
+      <_VersioneManifest>$(_VersioneBase).0</_VersioneManifest>
+      <_VersioneManifest Condition="$(_VersioneBase.Split('.').Length) == 4">$(_VersioneBase)</_VersioneManifest>
+      <_ContenutoManifest>$([System.Text.RegularExpressions.Regex]::Replace($([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\app.manifest')), '(assemblyIdentity\s+version=")[^"]*', '${1}$(_VersioneManifest)'))</_ContenutoManifest>
+      <!-- WriteLinesToFile spezzerebbe il contenuto sui ';': escape preventivo. -->
+      <_ContenutoManifest>$(_ContenutoManifest.Replace(';', '%3B'))</_ContenutoManifest>
+    </PropertyGroup>
+    <!-- WriteOnlyWhenDifferent evita di toccare il timestamp a ogni build,
+         che invaliderebbe l'incrementalita' di CoreCompile. -->
+    <WriteLinesToFile File="$(ApplicationManifest)" Lines="$(_ContenutoManifest)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <FileWrites Include="$(ApplicationManifest)" />
+    </ItemGroup>
+  </Target>
 
 </Project>

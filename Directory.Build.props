@@ -1,0 +1,26 @@
+<Project>
+
+  <PropertyGroup>
+    <!-- Unica fonte di verita' della versione: la CI la sovrascrive dalla tag git
+         con -p:Version=... (come gia' fa publish.ps1), e il manifest Win32 viene
+         generato a build time da questa proprieta' (vedi WinBoost.App.csproj).
+         Qui va aggiornata solo quando si bumpa la versione di sviluppo. -->
+    <Version>0.1.0</Version>
+
+    <Product>WinBoost</Product>
+    <Authors>scarlone</Authors>
+    <Company>scarlone</Company>
+    <Copyright>Copyright (c) 2026 scarlone</Copyright>
+    <RepositoryUrl>https://github.com/scarlone/WinBoost</RepositoryUrl>
+
+    <!-- Proprieta' identiche in tutti i progetti; quelle specifiche di un solo
+         progetto (UseWPF, OutputType, ApplicationManifest, IsPackable) restano
+         nei rispettivi csproj. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+
+</Project>
