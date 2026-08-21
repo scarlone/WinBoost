@@ -228,7 +228,7 @@ servizi (`sc.exe query`, uno per servizio): serve solo in fase di applicazione.
 dotnet test
 ```
 
-165 test su catalogo, registro, sessioni, rollback, parametri, collocazione finestra, pattern
+172 test su catalogo, registro, sessioni, rollback, parametri, collocazione finestra, pattern
 delle schede di rete, formato `.nip` e controllo aggiornamenti. Non toccano lo stato di
 sistema: le prove sul registro lavorano sotto una chiave usa-e-getta in
 `HKCU\Software\WinBoost.Tests\<guid>`, quindi non richiedono privilegi, e il motore di test
@@ -326,9 +326,19 @@ all'artefatto che funziona, e `NipWriter.Read` aggira la dichiarazione in lettur
 
 - `snapshot` — il valore precedente viene letto e salvato **prima** della scrittura.
   Se la voce non esisteva, il rollback la cancella invece di inventare un default.
-- `cmd` — comando inverso esplicito in `revertArgs`.
+- `cmd` — comando inverso esplicito in `revertArgs`. Senza `revertArgs` la voce viene
+  marcata `none`: meglio dichiararsi non annullabile che fingere di esserlo. Anche un
+  comando **fallito** diventa `none`, perche' non c'e' nulla da annullare.
 - `delete-key` — rimuove l'intero sottoalbero indicato da `revertKey`.
 - `none` — irreversibile; la UI e il journal lo dichiarano.
+
+**`delete-key` e' una potatura, non un ripristino.** Cancella il sottoalbero dichiarato
+senza chiedersi se esistesse gia' prima del tweak: se quella chiave conteneva altro,
+quell'altro sparisce. Per l'unico tweak che la usa il caso non si presenta — la chiave
+CLSID del menu contestuale non esiste finche' non la si crea — ma chi aggiunge un tweak
+con questa strategia deve saperlo. Un test lo mette per iscritto, e un altro verifica che
+`revertKey` non compaia mai accanto a una strategia diversa, dove sarebbe un campo inerte
+che promette un rollback che il motore non esegue.
 
 ## Sessioni
 
