@@ -1,0 +1,173 @@
+# Release: su push di una tag v* esegue i test, pubblica entrambi i profili,
+# firma (se configurata), calcola gli hash e crea la GitHub Release.
+#
+# I nomi degli asset sono un contratto con il manifest winget, non cambiarli:
+#   WinBoost-{version}-win-x64.exe            self-contained
+#   WinBoost-{version}-win-x64-framework.exe  framework-dependent
+#   SHA256SUMS.txt                            hash di entrambi, coi nomi finali
+# dove {version} e' la tag senza la "v" iniziale.
+#
+# Firma (Azure Trusted Signing) - opzionale: se i secret mancano la release
+# esce comunque, non firmata, e lo dichiara nel log e nelle note.
+# Secret richiesti (Settings > Secrets and variables > Actions):
+#   AZURE_TENANT_ID        tenant dell'app registration
+#   AZURE_CLIENT_ID        client id dell'app registration
+#   AZURE_CLIENT_SECRET    client secret dell'app registration
+#   SIGNING_ENDPOINT       es. https://weu.codesigning.azure.net/
+#   SIGNING_ACCOUNT_NAME   nome dell'account Trusted Signing
+#   SIGNING_CERT_PROFILE   nome del certificate profile
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+# contents: write serve a gh per creare la release e caricare gli asset.
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Build.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      # La tag e' l'autorita' sulla versione al momento del rilascio: passa a
+      # publish.ps1 -Version, che via -p:Version prevale sul valore statico in
+      # Directory.Build.props.
+      - name: Deriva la versione dalla tag
+        id: ver
+        run: |
+          $v = $env:GITHUB_REF_NAME -replace '^v', ''
+          "version=$v" | Add-Content $env:GITHUB_OUTPUT
+          Write-Host "Versione: $v (tag $env:GITHUB_REF_NAME)"
+
+      - name: Test
+        run: dotnet test WinBoost.sln -c Release
+
+      - name: Publish (entrambi i profili)
+        run: .\publish.ps1 -Mode Both -Version "${{ steps.ver.outputs.version }}"
+
+      # publish.ps1 produce WinBoost.exe in entrambi i profili, ma gli asset di
+      # una release devono avere nomi univoci: si rinomina qui, in una cartella
+      # dedicata, cosi' firma e hash lavorano gia' sui nomi finali.
+      - name: Rinomina gli asset coi nomi finali
+        run: |
+          $v = '${{ steps.ver.outputs.version }}'
+          New-Item -ItemType Directory -Path dist | Out-Null
+          Copy-Item publish\self-contained\WinBoost.exe      "dist\WinBoost-$v-win-x64.exe"
+          Copy-Item publish\framework-dependent\WinBoost.exe "dist\WinBoost-$v-win-x64-framework.exe"
+          Get-ChildItem dist
+
+      # Decidere qui, in uno step dedicato, rende l'esito esplicito nel log:
+      # un `if` muto sul passo di firma non direbbe perche' e' stato saltato.
+      - name: Verifica la configurazione di firma
+        id: signcheck
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          SIGNING_ENDPOINT: ${{ secrets.SIGNING_ENDPOINT }}
+          SIGNING_ACCOUNT_NAME: ${{ secrets.SIGNING_ACCOUNT_NAME }}
+          SIGNING_CERT_PROFILE: ${{ secrets.SIGNING_CERT_PROFILE }}
+        run: |
+          $required = 'AZURE_TENANT_ID', 'AZURE_CLIENT_ID', 'AZURE_CLIENT_SECRET',
+                      'SIGNING_ENDPOINT', 'SIGNING_ACCOUNT_NAME', 'SIGNING_CERT_PROFILE'
+          $missing = $required | Where-Object { -not [Environment]::GetEnvironmentVariable($_) }
+          if ($missing) {
+            Write-Host "Firma SALTATA, secret mancanti: $($missing -join ', ')"
+            Write-Host "La release verra' pubblicata con binari NON firmati (avviso SmartScreen)."
+            'signed=false' | Add-Content $env:GITHUB_OUTPUT
+          } else {
+            Write-Host 'Secret presenti: i binari verranno firmati con Azure Trusted Signing.'
+            'signed=true' | Add-Content $env:GITHUB_OUTPUT
+          }
+
+      - name: Firma (Azure Trusted Signing)
+        if: steps.signcheck.outputs.signed == 'true'
+        uses: azure/artifact-signing-action@v2
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ secrets.SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.SIGNING_ACCOUNT_NAME }}
+          certificate-profile-name: ${{ secrets.SIGNING_CERT_PROFILE }}
+          files-folder: ${{ github.workspace }}\dist
+          files-folder-filter: exe
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+
+      # Se l'action riuscisse senza produrre una firma valida, le note della
+      # release dichiarerebbero il falso: meglio fallire qui.
+      - name: Verifica la firma applicata
+        if: steps.signcheck.outputs.signed == 'true'
+        run: |
+          Get-ChildItem dist\*.exe | ForEach-Object {
+            $sig = Get-AuthenticodeSignature $_.FullName
+            if ($sig.Status -ne 'Valid') { throw "firma non valida su $($_.Name): $($sig.Status)" }
+            Write-Host "$($_.Name): firmato, $($sig.SignerCertificate.Subject)"
+          }
+
+      # Gli hash vanno calcolati DOPO l'eventuale firma: la firma modifica il
+      # file, quindi gli SHA256 scritti da publish.ps1 non varrebbero piu'.
+      - name: Calcola SHA256SUMS.txt sugli asset finali
+        run: |
+          Get-ChildItem dist\*.exe | Sort-Object Name | ForEach-Object {
+            '{0}  {1}' -f (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower(), $_.Name
+          } | Set-Content dist\SHA256SUMS.txt -Encoding ascii
+          Get-Content dist\SHA256SUMS.txt
+
+      # Il testo fisso vive in .github/release-notes-template.md; qui si
+      # riempiono i segnaposto. --generate-notes accoda il changelog generato
+      # da GitHub dopo le note passate con --notes-file.
+      - name: Crea la GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $v = '${{ steps.ver.outputs.version }}'
+          $signed = '${{ steps.signcheck.outputs.signed }}' -eq 'true'
+          $signing = if ($signed) {
+            'I binari di questa release sono firmati digitalmente (Azure Trusted Signing).'
+          } else {
+            'I binari di questa release NON sono firmati digitalmente: al primo avvio ' +
+            'SmartScreen mostrera'' "Windows ha protetto il PC". Scegli "Ulteriori ' +
+            'informazioni" e poi "Esegui comunque" solo dopo aver verificato lo SHA256 ' +
+            'come indicato sotto.'
+          }
+          $body = (Get-Content .github\release-notes-template.md -Raw).
+                    Replace('{VERSION}', $v).
+                    Replace('{SIGNING}', $signing).
+                    Replace('{SHA256}', (Get-Content dist\SHA256SUMS.txt -Raw).TrimEnd())
+          $bodyPath = Join-Path $env:RUNNER_TEMP 'release-body.md'
+          Set-Content $bodyPath $body -Encoding utf8
+
+          $ghArgs = @(
+            'release', 'create', $env:GITHUB_REF_NAME,
+            '--title', "WinBoost $v",
+            '--notes-file', $bodyPath,
+            '--generate-notes',
+            '--verify-tag',
+            "dist\WinBoost-$v-win-x64.exe",
+            "dist\WinBoost-$v-win-x64-framework.exe",
+            'dist\SHA256SUMS.txt'
+          )
+          if ($v -match '-') { $ghArgs += '--prerelease' }
+          & gh @ghArgs
+          if ($LASTEXITCODE -ne 0) { throw "gh release create fallito (exit $LASTEXITCODE)" }

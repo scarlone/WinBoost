@@ -1,0 +1,52 @@
+# CI: build Release + test della solution su ogni push/PR verso main.
+# Un solo job su windows-latest: il target e' WPF, esiste solo su Windows.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Serve solo leggere il repository per il checkout.
+permissions:
+  contents: read
+
+# Un push nuovo sullo stesso ref rende obsoleta la run precedente:
+# annullarla libera il runner invece di accodare build che nessuno leggera'.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # La cache integrata di setup-dotnet richiede packages.lock.json, che il
+      # repo non usa: si cachea direttamente la cartella dei pacchetti NuGet,
+      # con chiave sui csproj (e Directory.Build.props, quando esiste).
+      - uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Build.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore WinBoost.sln
+
+      - name: Build
+        run: dotnet build WinBoost.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test WinBoost.sln -c Release --no-build
