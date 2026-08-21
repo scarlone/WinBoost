@@ -58,7 +58,11 @@ function Publish-Variant {
         'publish', $project,
         '-c', 'Release',
         '-r', 'win-x64',
-        "--self-contained:$($SelfContained.ToString().ToLower())",
+        # Non usare --self-contained:<bool>: gli SDK recenti (10.x) scartano il
+        # valore in silenzio e con -r l'output diventa comunque self-contained,
+        # quindi il profilo "framework" usciva da 162 MB. I flag dedicati vengono
+        # inoltrati correttamente su tutti gli SDK.
+        $(if ($SelfContained) { '--self-contained' } else { '--no-self-contained' }),
         '-p:PublishSingleFile=true',
         '-p:IncludeNativeLibrariesForSelfExtract=true',
         '-p:DebugType=none',
