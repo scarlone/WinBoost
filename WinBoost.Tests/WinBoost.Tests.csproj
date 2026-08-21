@@ -21,6 +21,9 @@
     <!-- Il manifest reale, non una copia: il test sorveglia che l'eseguibile
          non cominci a chiedere l'elevazione all'avvio. -->
     <None Include="..\WinBoost.App\app.manifest" Link="app.manifest" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Il README dichiara numeri ricavati dal catalogo: un test li ricontrolla,
+         cosi' non invecchiano in silenzio a ogni tweak aggiunto. -->
+    <None Include="..\README.md" Link="README.md" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

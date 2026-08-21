@@ -49,7 +49,7 @@ WinBoost/
 │       ├─ PackageOps.cs     appx, uninstaller, winget, store, windows-update
 │       └─ GpuOps.cs         nvapi-profile
 ├─ WinBoost.App/             interfaccia WPF
-└─ WinBoost.Tests/           98 test, nessuno tocca lo stato di sistema
+└─ WinBoost.Tests/           174 test, nessuno tocca lo stato di sistema
 ```
 
 ## Build
@@ -142,7 +142,7 @@ Prima queste responsabilita' erano quattro `switch` paralleli dentro `TweakEngin
 (risoluzione, descrizione, esecuzione, rollback) piu' un elenco separato dei tipi supportati:
 bastava dimenticarne uno perche' un tweak venisse mostrato in anteprima e poi non applicato,
 in silenzio. E' successo davvero, con `store-update` e `windows-update`. Ora il motore fa solo
-orchestrazione — 366 righe invece di 955 — e due test sorvegliano il confine fra dati e codice.
+orchestrazione — 449 righe invece di 955 — e due test sorvegliano il confine fra dati e codice.
 
 ### Tipi di operazione
 
@@ -228,7 +228,7 @@ servizi (`sc.exe query`, uno per servizio): serve solo in fase di applicazione.
 dotnet test
 ```
 
-172 test su catalogo, registro, sessioni, rollback, parametri, collocazione finestra, pattern
+174 test su catalogo, registro, sessioni, rollback, parametri, collocazione finestra, pattern
 delle schede di rete, formato `.nip` e controllo aggiornamenti. Non toccano lo stato di
 sistema: le prove sul registro lavorano sotto una chiave usa-e-getta in
 `HKCU\Software\WinBoost.Tests\<guid>`, quindi non richiedono privilegi, e il motore di test

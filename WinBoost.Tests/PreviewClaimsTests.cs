@@ -148,6 +148,37 @@ public class PreviewClaimsTests
 }
 
 /// <summary>
+/// Il README annuncia numeri ricavati dal catalogo. Sono la prima cosa che legge
+/// chi arriva al progetto, e la prima a invecchiare: bastano due tweak aggiunti
+/// perche' dichiari il falso senza che nessuno se ne accorga.
+/// </summary>
+public class ReadmeTests
+{
+    private static string Readme() => File.ReadAllText(
+        Path.Combine(AppContext.BaseDirectory, "README.md"));
+
+    [Fact]
+    public void IlConteggioDiTweakEOperazioniEQuelloReale()
+    {
+        var catalog = TestData.LoadCatalog();
+        var tweak = catalog.Tweaks.Count;
+        var ops = catalog.Tweaks.Sum(t => t.Ops.Count);
+
+        Assert.Contains($"{tweak} tweak, {ops} operazioni", Readme());
+    }
+
+    /// <summary>
+    /// La tabella delle prestazioni cita il numero di tweak dell'anteprima completa:
+    /// se il catalogo cresce, quella misura si riferisce a un'altra cosa.
+    /// </summary>
+    [Fact]
+    public void LaTabellaDellePrestazioniCitaIlCatalogoAttuale()
+    {
+        Assert.Contains($"anteprima completa ({TestData.LoadCatalog().Tweaks.Count} tweak)", Readme());
+    }
+}
+
+/// <summary>
 /// L'eseguibile dichiara asInvoker e chiede l'elevazione solo quando serve. E' una
 /// proprieta' di sicurezza dichiarata nel README e nel manifest winget: se qualcuno
 /// mettesse requireAdministrator, ogni avvio diventerebbe un prompt UAC e la
