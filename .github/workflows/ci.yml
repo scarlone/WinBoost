@@ -27,16 +27,16 @@ jobs:
   build-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
       # La cache integrata di setup-dotnet richiede packages.lock.json, che il
       # repo non usa: si cachea direttamente la cartella dei pacchetti NuGet,
       # con chiave sui csproj (e Directory.Build.props, quando esiste).
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Build.props') }}

@@ -228,10 +228,18 @@ servizi (`sc.exe query`, uno per servizio): serve solo in fase di applicazione.
 dotnet test
 ```
 
-98 test su catalogo, registro, sessioni, rollback, parametri, collocazione finestra, pattern delle
-schede di rete e formato `.nip`. Non toccano lo stato di sistema: le prove sul registro
-lavorano sotto una chiave usa-e-getta in `HKCU\Software\WinBoost.Tests\<guid>`, quindi non
-richiedono privilegi, e il motore di test gira con `AutoRestartShell = false`.
+165 test su catalogo, registro, sessioni, rollback, parametri, collocazione finestra, pattern
+delle schede di rete, formato `.nip` e controllo aggiornamenti. Non toccano lo stato di
+sistema: le prove sul registro lavorano sotto una chiave usa-e-getta in
+`HKCU\Software\WinBoost.Tests\<guid>`, quindi non richiedono privilegi, e il motore di test
+gira con `AutoRestartShell = false`.
+
+Alcuni test sorvegliano le affermazioni di questo README invece del solo codice:
+l'anteprima dell'intero catalogo viene eseguita e poi si verifica che **nessuno** degli 85
+valori di registro presi di mira sia cambiato e che non sia rimasto alcun journal; il tempo
+dell'anteprima completa deve restare lontano dalle decine di secondi che costava prima del
+passaggio alle query CIM; e il manifest deve continuare a dichiarare `asInvoker`, cosi' che
+"si esplora senza privilegi" non smetta di essere vero in silenzio.
 
 Due test sorvegliano il confine fra dati e codice: ogni tipo di operazione dichiarato nel
 catalogo dev'essere eseguibile dal motore (confrontato con `TweakEngine.SupportedTypes`, non

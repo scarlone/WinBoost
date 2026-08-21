@@ -196,6 +196,17 @@ public static class RegistryHelper
     {
         if (!state.KeyExists) return "(chiave assente)";
         if (!state.ValueExists) return "(valore assente)";
-        return state.Kind == "Binary" ? $"0x{state.Value}" : state.Value ?? "";
+        if (state.Kind == "Binary") return $"0x{state.Value}";
+
+        return DescribeValue(state.Value);
     }
+
+    /// <summary>
+    /// Una stringa vuota e' un valore legittimo, non un'assenza: e' proprio cio' che
+    /// scrivono i tweak che disattivano un handler (il menu contestuale classico di
+    /// Windows 11, per esempio). Renderla come cella bianca nell'anteprima la
+    /// farebbe sembrare un difetto di visualizzazione invece della modifica vera.
+    /// </summary>
+    public static string DescribeValue(string? value) =>
+        string.IsNullOrEmpty(value) ? "(stringa vuota)" : value;
 }

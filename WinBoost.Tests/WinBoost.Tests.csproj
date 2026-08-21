@@ -18,6 +18,9 @@
     <!-- I test girano contro il catalogo reale, non contro una copia divergente. -->
     <None Include="..\data\tweaks.json" Link="data\tweaks.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\data\nvidia-profiles.json" Link="data\nvidia-profiles.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Il manifest reale, non una copia: il test sorveglia che l'eseguibile
+         non cominci a chiedere l'elevazione all'avvio. -->
+    <None Include="..\WinBoost.App\app.manifest" Link="app.manifest" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

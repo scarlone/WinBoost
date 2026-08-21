@@ -12,7 +12,7 @@ public abstract class RegistryOpHandlerBase : OpHandler
     public override ChangeDescription Describe(Tweak tweak, ResolvedOp r, IOpServices svc) =>
         new($@"{r.Path}\{r.Name}",
             RegistryHelper.Describe(RegistryHelper.Capture(r.Path!, r.Name!)),
-            r.Op.Value?.ToString() ?? "(nessun valore)");
+            r.Op.Value is null ? "(nessun valore)" : RegistryHelper.DescribeValue(r.Op.Value?.ToString()));
 
     public override void Execute(Tweak tweak, ResolvedOp r, SessionEntry entry, IOpServices svc)
     {
