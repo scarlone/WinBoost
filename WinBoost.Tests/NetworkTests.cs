@@ -93,3 +93,61 @@ public class AdapterPropertyMatchingTests
             Assert.Null(Record.Exception(() => NetworkHelper.MatchProperty(Proprieta, p)));
     }
 }
+
+/// <summary>
+/// Le istanze dei filtri NDIS non sono schede di rete. Su una macchina reale con
+/// VPN e Hyper-V ne comparivano venti accanto a tre schede vere, e ogni tweak di
+/// rete veniva risolto su tutte: anteprima illeggibile e scritture tentate contro
+/// oggetti che non esistono. L'enumerazione ora passa da MSFT_NetAdapter; questa
+/// e' la rete di sicurezza del percorso di ripiego.
+/// </summary>
+public class NdisFilterInstanceTests
+{
+    private static readonly string[] Reali = { "Ethernet", "vEthernet (Default Switch)", "Wi-Fi" };
+
+    [Theory]
+    [InlineData("Ethernet-QoS Packet Scheduler-0000")]
+    [InlineData("Ethernet-WFP Native MAC Layer LightWeight Filter-0000")]
+    [InlineData("Ethernet-Fortinet NDIS 6.0 LightWeight Filter-0000")]
+    [InlineData("vEthernet (Default Switch)-QoS Packet Scheduler-0000")]
+    public void UnIstanzaDiFiltroVieneRiconosciuta(string nome)
+    {
+        Assert.True(HardwareProbe.IsNdisFilterInstance(nome, Reali));
+    }
+
+    [Theory]
+    [InlineData("Ethernet")]
+    [InlineData("Wi-Fi")]
+    [InlineData("vEthernet (Default Switch)")]
+    [InlineData("NordLynx")]
+    public void UnaSchedaVeraNonVieneScartata(string nome)
+    {
+        Assert.False(HardwareProbe.IsNdisFilterInstance(nome, Reali));
+    }
+
+    /// <summary>
+    /// Non basta che il nome finisca con quattro cifre: serve che il prefisso sia
+    /// davvero una scheda dell'elenco. Una scheda chiamata "Realtek 2500" non e'
+    /// l'istanza di un filtro di qualcosa.
+    /// </summary>
+    [Fact]
+    public void QuattroCifreFinaliDaSoleNonBastano()
+    {
+        Assert.False(HardwareProbe.IsNdisFilterInstance("Realtek 2500", Reali));
+        Assert.False(HardwareProbe.IsNdisFilterInstance("Scheda-1234", Reali));
+    }
+
+    /// <summary>Il prefisso non deve poter essere la scheda stessa.</summary>
+    [Fact]
+    public void UnaSchedaNonEIstanzaDiSeStessa()
+    {
+        Assert.False(HardwareProbe.IsNdisFilterInstance("Ethernet-0000", new[] { "Ethernet-0000" }));
+    }
+
+    [Fact]
+    public void SuUnElencoVuotoNessunNomeEUnFiltro()
+    {
+        Assert.False(HardwareProbe.IsNdisFilterInstance("Ethernet-QoS Packet Scheduler-0000",
+            Array.Empty<string>()));
+    }
+}

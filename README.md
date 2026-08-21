@@ -49,7 +49,7 @@ WinBoost/
 │       ├─ PackageOps.cs     appx, uninstaller, winget, store, windows-update
 │       └─ GpuOps.cs         nvapi-profile
 ├─ WinBoost.App/             interfaccia WPF
-└─ WinBoost.Tests/           174 test, nessuno tocca lo stato di sistema
+└─ WinBoost.Tests/           185 test, nessuno tocca lo stato di sistema
 ```
 
 ## Build
@@ -222,13 +222,38 @@ costo e' irrilevante e la semantica di riavvio del driver e' gestita per noi.
 Nello stesso passaggio l'anteprima ha smesso di interrogare lo stato di esecuzione dei
 servizi (`sc.exe query`, uno per servizio): serve solo in fase di applicazione.
 
+### Quali schede sono "attive"
+
+Le schede si enumerano da `MSFT_NetAdapter`, cioe' dalla stessa sorgente su cui lavorano
+i cmdlet `NetAdapter` usati dalle scritture: i nomi che restituisce sono esattamente
+quelli che il percorso di applicazione sa indirizzare.
+
+Prima si usava `NetworkInterface.GetAllNetworkInterfaces()`, che sembra equivalente e non
+lo e': espone anche **un'istanza per ogni filtro NDIS legato a ogni scheda** —
+`Ethernet-QoS Packet Scheduler-0000`, `Ethernet-WFP Native MAC Layer LightWeight
+Filter-0000`, e via cosi'. Condividono MAC e velocita' della scheda sottostante, ma non
+sono schede: i cmdlet non sanno indirizzarle.
+
+Misurato su una macchina reale con VPN e Hyper-V attivi:
+
+| | prima | dopo |
+|---|---|---|
+| schede enumerate | 24 | 3 |
+| righe di anteprima | 315, di cui 96 di rete | 168, di cui 12 di rete |
+| anteprima completa | ~1.400 ms | ~335 ms |
+
+Il numero dipende da quante schede sono su in quel momento — una VPN attiva si porta
+dietro le proprie istanze di filtro — ma la direzione no: ogni tweak di rete veniva
+risolto anche sulle pseudo-schede, riempiendo l'anteprima di righe prive di significato
+e tentando scritture contro oggetti inesistenti.
+
 ## Test
 
 ```powershell
 dotnet test
 ```
 
-174 test su catalogo, registro, sessioni, rollback, parametri, collocazione finestra, pattern
+185 test su catalogo, registro, sessioni, rollback, parametri, collocazione finestra, pattern
 delle schede di rete, formato `.nip` e controllo aggiornamenti. Non toccano lo stato di
 sistema: le prove sul registro lavorano sotto una chiave usa-e-getta in
 `HKCU\Software\WinBoost.Tests\<guid>`, quindi non richiedono privilegi, e il motore di test

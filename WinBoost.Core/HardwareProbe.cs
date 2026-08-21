@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Management;
 using System.Net.NetworkInformation;
 using System.Runtime.Versioning;
@@ -80,21 +82,95 @@ public sealed class HardwareProbe
         return list;
     }
 
+    /// <summary>
+    /// Le schede si enumerano da MSFT_NetAdapter, cioe' dalla stessa sorgente su cui
+    /// lavorano i cmdlet NetAdapter usati dalle scritture: i nomi che restituisce sono
+    /// esattamente quelli che il percorso di applicazione sa indirizzare.
+    ///
+    /// NetworkInterface.GetAllNetworkInterfaces() sembrava equivalente e non lo e':
+    /// espone anche un'istanza per ogni filtro NDIS legato a ogni scheda
+    /// ("Ethernet-QoS Packet Scheduler-0000", "Ethernet-WFP Native MAC Layer
+    /// LightWeight Filter-0000", ...), che condividono MAC e velocita' della scheda
+    /// sottostante ma non sono schede. Su una macchina reale con VPN e Hyper-V si
+    /// passava da 3 schede vere a 24 voci, e ogni tweak di rete veniva risolto su
+    /// tutte: anteprima illeggibile e scritture tentate contro oggetti inesistenti.
+    /// </summary>
     private static List<NetAdapterInfo> ProbeAdapters()
+    {
+        try { return ProbeAdaptersViaCim(); }
+        catch (ManagementException) { }
+        catch (UnauthorizedAccessException) { }
+        catch (COMException) { }
+
+        return ProbeAdaptersViaDotNet();
+    }
+
+    private static List<NetAdapterInfo> ProbeAdaptersViaCim()
+    {
+        var list = new List<NetAdapterInfo>();
+
+        var scope = new ManagementScope(@"\\.\root\StandardCimv2");
+        scope.Connect();
+
+        // InterfaceOperationalStatus 1 = Up, l'equivalente di "Status: Up" in Get-NetAdapter.
+        using var searcher = new ManagementObjectSearcher(scope, new ObjectQuery(
+            "SELECT Name, InterfaceGuid, InterfaceDescription FROM MSFT_NetAdapter "
+            + "WHERE InterfaceOperationalStatus = 1"));
+
+        foreach (var o in searcher.Get())
+        {
+            using var mo = (ManagementObject)o;
+            var name = mo["Name"] as string;
+            if (string.IsNullOrWhiteSpace(name)) continue;
+
+            list.Add(new NetAdapterInfo(
+                name,
+                mo["InterfaceGuid"] as string ?? "",
+                mo["InterfaceDescription"] as string ?? ""));
+        }
+
+        return list;
+    }
+
+    /// <summary>
+    /// Ripiego se CIM non risponde. Applica comunque il filtro sulle istanze dei
+    /// filtri NDIS: senza, sarebbe una botola che riapre il difetto.
+    /// </summary>
+    private static List<NetAdapterInfo> ProbeAdaptersViaDotNet()
     {
         var list = new List<NetAdapterInfo>();
         try
         {
-            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
-            {
-                if (ni.OperationalStatus != OperationalStatus.Up) continue;
-                if (ni.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel) continue;
+            var candidate = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(ni => ni.OperationalStatus == OperationalStatus.Up)
+                .Where(ni => ni.NetworkInterfaceType is not (NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel))
+                .ToList();
+
+            var names = candidate.Select(ni => ni.Name).ToList();
+
+            foreach (var ni in candidate.Where(ni => !IsNdisFilterInstance(ni.Name, names)))
                 list.Add(new NetAdapterInfo(ni.Name, ni.Id, ni.Description));
-            }
         }
         catch (NetworkInformationException) { }
         return list;
     }
+
+    /// <summary>
+    /// Un'istanza di filtro NDIS si chiama "&lt;scheda&gt;-&lt;nome filtro&gt;-0000": nome di una
+    /// scheda presente nell'elenco, un trattino, il filtro, e un indice a quattro cifre.
+    /// Si pretende che il prefisso corrisponda a una scheda vera, non solo che il nome
+    /// finisca con quattro cifre: una scheda potrebbe legittimamente chiamarsi cosi'.
+    /// </summary>
+    public static bool IsNdisFilterInstance(string name, IEnumerable<string> allNames)
+    {
+        if (!FilterSuffix.IsMatch(name)) return false;
+
+        return allNames.Any(other => other.Length < name.Length
+            && !string.Equals(other, name, StringComparison.OrdinalIgnoreCase)
+            && name.StartsWith(other + "-", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static readonly Regex FilterSuffix = new(@"-\d{4}$", RegexOptions.Compiled);
 
     private static bool ProbeSystemDriveIsSsd()
     {
