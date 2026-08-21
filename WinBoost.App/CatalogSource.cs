@@ -22,6 +22,7 @@ public static class CatalogSource
     private const string NvidiaResourceName = "WinBoost.nvidia-profiles.json";
     private const string Flag = "--catalog";
     private const string InspectorFlag = "--profile-inspector";
+    private const string NoUpdateCheckFlag = "--no-update-check";
 
     /// <summary>Profili NVIDIA verificati, incorporati come il catalogo principale.</summary>
     public static NvidiaProfileCatalog LoadNvidiaProfiles() =>
@@ -29,6 +30,14 @@ public static class CatalogSource
 
     /// <summary>Percorso di nvidiaProfileInspector.exe indicato dall'utente, se presente.</summary>
     public static string? ParseInspectorPath(IReadOnlyList<string> args) => ParseFlag(args, InspectorFlag);
+
+    /// <summary>
+    /// Sopprime il controllo aggiornamenti per questa esecuzione. Vale per chi non
+    /// vuole traffico di rete non richiesto ma non intende cambiare la preferenza
+    /// salvata: utile in ambienti isolati e negli avvii automatici.
+    /// </summary>
+    public static bool UpdateCheckDisabled(IReadOnlyList<string> args) =>
+        args.Any(a => string.Equals(a, NoUpdateCheckFlag, StringComparison.OrdinalIgnoreCase));
 
     public static LoadedCatalog Load(IReadOnlyList<string> args)
     {

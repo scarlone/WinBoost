@@ -196,6 +196,9 @@ public sealed class MainViewModel : ObservableBase
     private bool _busy;
     private string _status = "";
 
+    private PreferencesStore? _preferences;
+    private UpdateInfo? _update;
+
     /// <summary>Piccolo wrapper per non dipendere da WPF nei test.</summary>
     public sealed class Dispatcher_
     {
@@ -239,6 +242,8 @@ public sealed class MainViewModel : ObservableBase
         RollbackCommand = new RelayCommand(s => RunRollback(s as Session), s => !Busy && s is Session { IsRolledBack: false });
         RefreshSessionsCommand = new RelayCommand(_ => LoadSessions());
         ElevateCommand = new RelayCommand(_ => Elevate(), _ => !IsElevated);
+        UpdateActionCommand = new RelayCommand(_ => RunUpdateAction());
+        DisableUpdateCheckCommand = new RelayCommand(_ => DisableUpdateCheck());
 
         Hardware = engine.Probe.Summary();
         LoadSessions();
@@ -271,6 +276,8 @@ public sealed class MainViewModel : ObservableBase
     public ICommand RollbackCommand { get; }
     public ICommand RefreshSessionsCommand { get; }
     public ICommand ElevateCommand { get; }
+    public ICommand UpdateActionCommand { get; }
+    public ICommand DisableUpdateCheckCommand { get; }
 
     public string SelectedCategory
     {
@@ -471,6 +478,106 @@ public sealed class MainViewModel : ObservableBase
         {
             AppendLog("Elevazione annullata dall'utente.");
         }
+    }
+
+    // ================ controllo aggiornamenti ================
+
+    public bool UpdateAvailable => _update is not null;
+
+    public string UpdateHeadline => _update is null ? "" : $"Disponibile la versione {_update.Latest}";
+
+    /// <summary>
+    /// Sotto winget l'azione giusta non e' scaricare l'exe a mano: sostituirlo
+    /// desincronizzerebbe il database dei pacchetti. Si rimanda al comando.
+    /// </summary>
+    public string UpdateActionText => _update?.Install == InstallKind.Winget
+        ? "Copia il comando winget"
+        : "Apri la pagina della release";
+
+    public string UpdateTooltip => _update is null
+        ? ""
+        : _update.Install == InstallKind.Winget
+            ? $"Installato tramite winget. Aggiorna con: {_update.WingetUpgradeCommand}"
+            : $"Versione in uso {_update.Current}, ultima pubblicata {_update.Latest}. "
+              + "Il download resta manuale: WinBoost non si aggiorna da solo.";
+
+    /// <summary>
+    /// Avvia il controllo in sottofondo. Non blocca l'avvio, non ha una UI di
+    /// attesa e non segnala i fallimenti: se la rete non c'e' o GitHub non
+    /// risponde, semplicemente non compare nulla.
+    /// </summary>
+    public void BeginUpdateCheck(SemVer current, PreferencesStore store, UpdateChecker? checker = null)
+    {
+        _preferences = store;
+        if (!store.Load().CheckOnStartup) return;
+
+        var install = InstallOrigin.Detect();
+        var client = checker ?? new UpdateChecker();
+
+        _ = Task.Run(async () =>
+        {
+            var info = await client.CheckAsync(current, install).ConfigureAwait(false);
+            if (info is null || !info.IsNewer) return;
+
+            // La finestra puo' essere gia' stata chiusa mentre la richiesta era in volo.
+            try { _ui.Post(() => SetUpdate(info)); }
+            catch (TaskCanceledException) { }
+        });
+    }
+
+    private void SetUpdate(UpdateInfo? info)
+    {
+        _update = info;
+
+        Raise(nameof(UpdateAvailable));
+        Raise(nameof(UpdateHeadline));
+        Raise(nameof(UpdateActionText));
+        Raise(nameof(UpdateTooltip));
+
+        if (info is not null)
+            AppendLog($"Aggiornamento disponibile: {info.Latest} (in uso {info.Current}).");
+    }
+
+    private void RunUpdateAction()
+    {
+        if (_update is null) return;
+
+        if (_update.Install == InstallKind.Winget)
+        {
+            try
+            {
+                Clipboard.SetText(_update.WingetUpgradeCommand);
+                AppendLog($"Comando copiato negli appunti: {_update.WingetUpgradeCommand}");
+            }
+            catch (System.Runtime.InteropServices.ExternalException)
+            {
+                // Gli appunti possono essere occupati da un altro processo: si ripiega
+                // sul log, che il comando lo mostra comunque.
+                AppendLog($"Appunti non disponibili. Aggiorna con: {_update.WingetUpgradeCommand}");
+            }
+            return;
+        }
+
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = _update.ReleasePageUrl,
+                UseShellExecute = true
+            });
+        }
+        catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            AppendLog($"Impossibile aprire il browser. Vai su {_update.ReleasePageUrl}");
+        }
+    }
+
+    private void DisableUpdateCheck()
+    {
+        _preferences?.Save(new UpdatePreferences { CheckOnStartup = false });
+        AppendLog("Controllo aggiornamenti disattivato. Riattivabile da " +
+                  (_preferences?.FilePath ?? "settings.json") + ".");
+        SetUpdate(null);
     }
 
     public void UpdateStatus()

@@ -63,6 +63,33 @@
                            LineHeight="16" VerticalAlignment="Center" Margin="0,0,16,0" />
 
                 <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Notifica, non aggiornamento: WinBoost non scarica e non
+                         sostituisce nulla da solo. Il download resta un gesto
+                         dell'utente, sulla pagina della release. -->
+                    <Border CornerRadius="5" Padding="10,4" Margin="0,0,8,0"
+                            Background="#152A1B" BorderBrush="#2C5136" BorderThickness="1"
+                            VerticalAlignment="Center"
+                            ToolTip="{Binding UpdateTooltip}"
+                            Visibility="{Binding UpdateAvailable, Converter={StaticResource BoolVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding UpdateHeadline}" FontSize="11"
+                                       FontWeight="SemiBold" Foreground="{StaticResource Green}"
+                                       VerticalAlignment="Center" />
+
+                            <Button Command="{Binding UpdateActionCommand}"
+                                    Content="{Binding UpdateActionText}"
+                                    Style="{StaticResource Ghost}" Margin="10,0,0,0"
+                                    Padding="8,3" FontSize="11" />
+
+                            <Button Command="{Binding DisableUpdateCheckCommand}"
+                                    Content="Non mostrare piu'"
+                                    Style="{StaticResource Ghost}" Margin="4,0,0,0"
+                                    Padding="8,3" FontSize="11"
+                                    AutomationProperties.Name="Disattiva il controllo aggiornamenti"
+                                    ToolTip="Disattiva il controllo all'avvio. La scelta viene salvata." />
+                        </StackPanel>
+                    </Border>
+
                     <Border CornerRadius="5" Padding="10,5" Margin="0,0,8,0"
                             Background="#331715" BorderBrush="#6E322D" BorderThickness="1"
                             VerticalAlignment="Center"

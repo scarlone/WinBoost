@@ -346,9 +346,41 @@ profilo comportamentale del malware.
 4. **Microsoft Store: non praticabile.** Un'app che scrive in `HKLM` e modifica servizi
    non supera la certificazione.
 
-Se in futuro aggiungi aggiornamenti automatici, verifica il binario scaricato **per
-firma**, non per hash pubblicato sullo stesso canale: altrimenti chi controlla il canale
+## Controllo aggiornamenti
+
+WinBoost **notifica** gli aggiornamenti, non li installa. All'avvio interroga
+`api.github.com/repos/scarlone/WinBoost/releases/latest`, confronta la tag con la
+propria versione e, se c'e' una release piu' recente, mostra un avviso
+nell'intestazione. Non scarica e non esegue nulla.
+
+La distinzione non e' pigrizia. Un auto-updater che verifica il binario scaricato per
+hash pubblicato **sullo stesso canale** non aggiunge sicurezza: chi controlla il canale
 controlla la macchina, che e' il difetto strutturale da cui questo progetto e' nato.
+Finche' l'eseguibile non e' firmato e la verifica non avviene per firma Authenticode,
+l'unica cosa onesta e' avvisare e lasciare il download all'utente.
+
+Per la stessa ragione l'URL della release viene **costruito da una costante del
+programma**, non letto dal campo `html_url` della risposta: una risposta manomessa puo'
+mentire sul numero di versione, non su dove mandare l'utente a scaricare. Le tag fuori
+dall'alfabeto `[A-Za-z0-9._-]` vengono rifiutate invece di finire dentro un URL.
+
+Se l'eseguibile risulta installato sotto la radice dei pacchetti di winget, l'avviso non
+propone il download: rimanda a `winget upgrade`. Sostituire l'exe a mano
+desincronizzerebbe il database dei pacchetti.
+
+Il controllo e' silenzioso quando fallisce: rete assente, endpoint irraggiungibile,
+limite di richieste superato o risposta malformata non producono nessun messaggio.
+Timeout di 5 secondi, in sottofondo, dopo che la finestra e' gia' comparsa.
+
+**Disattivarlo.** Il controllo apre una connessione che l'utente non ha chiesto ed
+espone il suo indirizzo IP a GitHub. Due modi per spegnerlo:
+
+| Modo | Effetto |
+| --- | --- |
+| `WinBoost.exe --no-update-check` | solo per quell'esecuzione |
+| pulsante "Non mostrare piu'" nell'avviso | salvato in `%LOCALAPPDATA%\WinBoost\settings.json` |
+
+Per riattivarlo, rimetti `"checkOnStartup": true` in quel file o cancellalo.
 
 ## Licenza
 
