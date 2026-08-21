@@ -24,9 +24,16 @@ WinBoost-{version}-win-x64-framework.exe  framework-dependent  <-- questo va su 
 SHA256SUMS.txt
 ```
 
-I manifest usano lo schema **1.28.0**, l'ultimo pubblicato sia in
-`winget-pkgs/doc/manifest/schema/` sia in `winget-cli/schemas/JSON/manifests/`.
-Attenzione a un dettaglio verificato a caro prezzo: winget deduce il tipo di
+I manifest usano lo schema **1.12.0**, non l'ultimo pubblicato.
+
+Le due validazioni non coincidono, e conta solo la seconda: `winget validate` del
+client accetta la 1.28.0 senza obiezioni, ma la pipeline di `winget-pkgs` la rifiuta
+con la label `Manifest-Version-Error`. I pacchetti mergiati oggi — PowerToys,
+GitHub CLI, 7zip — sono tutti a 1.12.0. Prima di alzare la versione dello schema,
+guarda cosa usano i pacchetti appena mergiati: la presenza di uno schema piu' recente
+in `winget-cli/schemas/` non significa che il repository lo accetti.
+
+Attenzione a un secondo dettaglio verificato a caro prezzo: winget deduce il tipo di
 manifesto dal commento `yaml-language-server` in testa al file, e li' vuole
 `defaultLocale` in camelCase anche se il `$id` ufficiale dello schema e' tutto
 minuscolo. Con la minuscola `winget validate` fallisce con
