@@ -22,10 +22,8 @@ Dependencies:
 Installers:
 - Architecture: x64
   InstallerUrl: https://github.com/scarlone/WinBoost/releases/download/v0.1.0/WinBoost-0.1.0-win-x64-framework.exe
-  # SEGNAPOSTO: la release v0.1.0 non esiste ancora. Sostituire con lo SHA256 reale
-  # dell'asset (e' in SHA256SUMS.txt accanto al binario) prima di aprire la PR.
-  # 64 zeri: passa la validazione dello schema ma nessun file ha questo hash,
-  # quindi un submit per errore fallirebbe comunque in pipeline.
-  InstallerSha256: 0000000000000000000000000000000000000000000000000000000000000000
+  # SHA256 dell'asset pubblicato nella release v0.1.0, verificato riscaricando il
+  # file e ricalcolandolo: coincide con quanto dichiarato in SHA256SUMS.txt.
+  InstallerSha256: D35BBA5BD28AE1A5ACFD86391780437BB5460008CCD089A81C7E9BE19CEF8A22
 ManifestType: installer
 ManifestVersion: 1.28.0
